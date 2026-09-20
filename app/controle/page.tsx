@@ -749,8 +749,7 @@ export default function MobileControlPage() {
     setPartyError(null);
     try {
       const q = partySearchQuery.trim();
-      const query = /clipe|oficial|video|show/i.test(q) ? q : `${q} clipe oficial`;
-      const res = await fetch(`/api/search-youtube?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/search-youtube?q=${encodeURIComponent(q)}&type=party`);
       const data = await res.json();
 
       if (data.items && Array.isArray(data.items)) {

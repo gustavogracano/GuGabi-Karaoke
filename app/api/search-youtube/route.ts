@@ -272,9 +272,19 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  const type = searchParams.get("type"); // "party" para clipes oficiais/originais
+
   // 2. Busca Híbrida Inteligente (Scraper Ilimitado + Validação de Gravadoras / Embed)
-  const hasKaraokeWord = /karaok[eê]|playback/i.test(q);
-  const searchQuery = hasKaraokeWord ? q : `${q} karaoke`;
+  let searchQuery = q;
+  if (type === "party") {
+    // Para o Modo Festa (clipes oficiais com voz original), não injeta 'karaoke'
+    const hasOfficialWord = /clipe|oficial|official|video|music video|lyric/i.test(q);
+    searchQuery = hasOfficialWord ? q : `${q} clipe oficial`;
+  } else {
+    // Para pedidos normais de karaokê
+    const hasKaraokeWord = /karaok[eê]|playback/i.test(q);
+    searchQuery = hasKaraokeWord ? q : `${q} karaoke`;
+  }
 
   // 2a. Busca direta no YouTube (Sem limite de cota 429)
   let rawCandidates: YouTubeSearchResult[] = await scrapeYouTubeSearchResults(searchQuery);
