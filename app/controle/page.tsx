@@ -1478,24 +1478,24 @@ export default function MobileControlPage() {
               </div>
 
               {/* Toggle Modo Livre / Karaokê */}
-              <div className="flex items-center justify-between bg-purple-500/10 border border-purple-500/30 p-2.5 rounded-xl backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🎵</span>
-                  <div>
-                    <p className="text-xs font-bold text-purple-300">
+              <div className="flex items-center justify-between gap-2 bg-purple-500/10 border border-purple-500/30 p-2.5 rounded-xl backdrop-blur-md">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-lg shrink-0">🎵</span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-purple-300 whitespace-nowrap truncate">
                       {searchType === "karaoke" ? "Modo Karaokê 🎤" : "Modo Livre 🎶"}
                     </p>
-                    <p className="text-[10px] text-purple-400/80">
+                    <p className="text-[10px] text-purple-400/80 truncate">
                       {searchType === "karaoke"
-                        ? "Busca versões karaokê com letra"
-                        : "Busca qualquer versão — clipe, ao vivo, cover..."}
+                        ? "Busca versões com letra"
+                        : "Busca qualquer versão (clipe, ao vivo...)"}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSearchType(t => t === "karaoke" ? "free" : "karaoke")}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black border transition-all ${
+                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-black border transition-all whitespace-nowrap ${
                     searchType === "karaoke"
                       ? "bg-purple-600/40 border-purple-500/50 text-purple-200"
                       : "bg-emerald-600/30 border-emerald-500/40 text-emerald-300"
