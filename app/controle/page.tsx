@@ -147,7 +147,7 @@ export default function MobileControlPage() {
   }, [emojiCooldown]);
 
   // Aba Ativa
-  const [activeTab, setActiveTab] = useState<"pedir" | "fila" | "mesa">("pedir");
+  const [activeTab, setActiveTab] = useState<"pedir" | "fila" | "mesa" | "fofoca">("pedir");
 
   // 1. Carrega Perfil e Admin do LocalStorage
   useEffect(() => {
@@ -1367,41 +1367,55 @@ export default function MobileControlPage() {
         </div>
       </div>
 
-      {/* NAVEGAÇÃO DE ABAS */}
-      <div className="px-4 pt-2">
-        <div className="flex bg-slate-900/80 p-1 rounded-xl border border-white/10 text-xs font-bold shadow-inner backdrop-blur-md">
+      {/* NAVEGAÇÃO DE ABAS (4 ABAS PERFEITAS PARA MOBILE) */}
+      <div className="px-3 pt-2">
+        <div className="grid grid-cols-4 bg-slate-900/80 p-1 rounded-xl border border-white/10 text-xs font-bold shadow-inner backdrop-blur-md gap-1">
           <button
             onClick={() => setActiveTab("pedir")}
-            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+            className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${
               activeTab === "pedir"
                 ? "bg-pink-600 text-white shadow"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            <Search className="w-3.5 h-3.5" />
-            <span>Pedir Música</span>
+            <Search className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Pedir</span>
           </button>
           <button
             onClick={() => setActiveTab("fila")}
-            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+            className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${
               activeTab === "fila"
                 ? "bg-pink-600 text-white shadow"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Fila ({pendingQueue.length})</span>
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Fila ({pendingQueue.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("mesa")}
-            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+            className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${
               activeTab === "mesa"
                 ? "bg-pink-600 text-white shadow"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            <Volume2 className="w-3.5 h-3.5" />
-            <span>Sons & Memes</span>
+            <Volume2 className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sons</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("fofoca")}
+            className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap relative ${
+              activeTab === "fofoca"
+                ? "bg-pink-600 text-white shadow"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 shrink-0 text-yellow-400" />
+            <span className="truncate">Fofocas</span>
+            {gossips.length > 0 && activeTab !== "fofoca" && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
+            )}
           </button>
         </div>
       </div>
@@ -1908,7 +1922,8 @@ export default function MobileControlPage() {
 
         {/* ================= ABA 3: SONS & MEMES ================= */}
         {activeTab === "mesa" && (
-          <div className="space-y-6">
+          <div className="space-y-4">
+            {/* Mesa de Som (Toca na TV da Sala) */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-pink-400 flex items-center gap-1.5">
@@ -1964,7 +1979,12 @@ export default function MobileControlPage() {
                 })}
               </div>
             </div>
+          </div>
+        )}
 
+        {/* ================= ABA 4: FOFOCAS & EXPOSED ================= */}
+        {activeTab === "fofoca" && (
+          <div className="space-y-6">
             {/* Enviar Fofoca */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -2033,7 +2053,7 @@ export default function MobileControlPage() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <MessageSquare className="w-3.5 h-3.5 text-yellow-400" />
-                  <span>Últimas Fofocas da Festa</span>
+                  <span>Mural de Fofocas da Festa</span>
                 </h3>
 
                 {isAdminAuthenticated && gossips.length > 0 && (
@@ -2048,7 +2068,7 @@ export default function MobileControlPage() {
               </div>
 
               {gossips.length > 0 ? (
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
                   {gossips.map((g, idx) => (
                     <div
                       key={g.id || idx}
@@ -2072,8 +2092,8 @@ export default function MobileControlPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 text-center py-3">
-                  Nenhuma fofoca enviada ainda. Seja o primeiro!
+                <p className="text-xs text-slate-500 text-center py-6">
+                  Nenhuma fofoca enviada ainda. Seja o primeiro a soltar um exposed! 🤫
                 </p>
               )}
             </div>
