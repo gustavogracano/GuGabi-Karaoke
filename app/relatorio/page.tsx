@@ -7,6 +7,7 @@ import {
   isSupabaseConfigured,
   KaraokeQueueItem,
   KaraokeEvent,
+  KaraokeReaction,
 } from "@/lib/supabase";
 import { COMIC_TAGS } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -34,6 +35,8 @@ import {
 export default function RelatorioPage() {
   const [finishedSongs, setFinishedSongs] = useState<KaraokeQueueItem[]>([]);
   const [gossips, setGossips] = useState<KaraokeEvent[]>([]);
+  const [allReactions, setAllReactions] = useState<KaraokeReaction[]>([]);
+  const [soundEvents, setSoundEvents] = useState<KaraokeEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -77,6 +80,27 @@ export default function RelatorioPage() {
 
       if (gossipsData) {
         setGossips(gossipsData);
+      }
+
+      // Busca todas as reações individuais (quem votou em quem)
+      const { data: reactionsData } = await supabase
+        .from("karaoke_reactions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (reactionsData) {
+        setAllReactions(reactionsData);
+      }
+
+      // Busca sons disparados da mesa de meme
+      const { data: soundsData } = await supabase
+        .from("karaoke_events")
+        .select("*")
+        .eq("type", "sound")
+        .order("created_at", { ascending: false });
+
+      if (soundsData) {
+        setSoundEvents(soundsData.filter(s => !s.payload.startsWith("admin_")));
       }
     } catch (err) {
       console.error("Erro ao carregar relatório:", err);
@@ -130,6 +154,34 @@ export default function RelatorioPage() {
     return sorted[0] || null;
   }, [finishedSongs]);
 
+  // Maior Atirador de Tomates (Hater Oficial da Noite)
+  const topTomatoThrower = useMemo(() => {
+    if (allReactions.length === 0) return null;
+    const counts: Record<string, number> = {};
+    allReactions
+      .filter((r) => r.reaction_type === "tomato")
+      .forEach((r) => {
+        const name = r.voter_name || "Anônimo";
+        counts[name] = (counts[name] || 0) + 1;
+      });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return sorted.length > 0 ? { name: sorted[0][0], count: sorted[0][1] } : null;
+  }, [allReactions]);
+
+  // Maior Fã da Galera (quem mais deu ❤️ e 🔥)
+  const topCheerer = useMemo(() => {
+    if (allReactions.length === 0) return null;
+    const counts: Record<string, number> = {};
+    allReactions
+      .filter((r) => r.reaction_type === "heart" || r.reaction_type === "fire" || r.reaction_type === "clap")
+      .forEach((r) => {
+        const name = r.voter_name || "Anônimo";
+        counts[name] = (counts[name] || 0) + 1;
+      });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return sorted.length > 0 ? { name: sorted[0][0], count: sorted[0][1] } : null;
+  }, [allReactions]);
+
   // Limpar sessão / Nova festa
   const handleClearSession = async () => {
     setIsClearing(true);
@@ -171,6 +223,12 @@ export default function RelatorioPage() {
     }
     if (topPerformer) {
       text += `⚡ *Inimigo do Fim:* ${topPerformer.name} com ${topPerformer.count} músicas cantadas!\n`;
+    }
+    if (topTomatoThrower) {
+      text += `🎯 *Hater da Noite:* ${topTomatoThrower.name} jogou ${topTomatoThrower.count} tomates na TV!\n`;
+    }
+    if (topCheerer) {
+      text += `💖 *Maior Fã da Galera:* ${topCheerer.name} distribuiu ${topCheerer.count} reações de amor!\n`;
     }
 
     if (gossips.length > 0) {
@@ -417,6 +475,60 @@ export default function RelatorioPage() {
 
             <div className="text-5xl md:text-6xl select-none text-purple-400 shrink-0">
               🔥
+            </div>
+          </div>
+
+          {/* HATER OFICIAL DA FESTA (QUEM MAIS JOGOU TOMATE) */}
+          <div className="bg-gradient-to-b from-rose-950/30 to-slate-900/80 border border-rose-500/30 rounded-3xl p-5 shadow flex items-center justify-between backdrop-blur-md">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-black uppercase tracking-wider text-rose-300 bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-500/40">
+                  Hater da Noite 🎯
+                </span>
+              </div>
+
+              {topTomatoThrower ? (
+                <div className="mt-2">
+                  <p className="text-2xl font-black text-white">{topTomatoThrower.name}</p>
+                  <p className="text-xs text-slate-300 mt-0.5">O dedo mais rápido no botão de tomate!</p>
+                  <span className="inline-block mt-2 text-xs font-bold text-rose-300 bg-rose-600/20 px-3 py-1 rounded-xl border border-rose-500/30">
+                    🍅 {topTomatoThrower.count} tomates arremessados
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 mt-2">Nenhum hater detectado até agora.</p>
+              )}
+            </div>
+
+            <div className="text-5xl md:text-6xl select-none shrink-0">
+              🎯
+            </div>
+          </div>
+
+          {/* MAIOR FÃ DA GALERA (QUEM MAIS DISTRIBUIU CORAÇÕES) */}
+          <div className="bg-gradient-to-b from-pink-950/30 to-slate-900/80 border border-pink-500/30 rounded-3xl p-5 shadow flex items-center justify-between backdrop-blur-md">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-black uppercase tracking-wider text-pink-300 bg-pink-950/60 px-2.5 py-0.5 rounded-full border border-pink-500/40">
+                  Maior Fã da Galera ❤️
+                </span>
+              </div>
+
+              {topCheerer ? (
+                <div className="mt-2">
+                  <p className="text-2xl font-black text-white">{topCheerer.name}</p>
+                  <p className="text-xs text-slate-300 mt-0.5">Aplaudiu e vibrou com todo mundo no palco!</p>
+                  <span className="inline-block mt-2 text-xs font-bold text-pink-300 bg-pink-600/20 px-3 py-1 rounded-xl border border-pink-500/30">
+                    ❤️ {topCheerer.count} reações de apoio
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 mt-2">Nenhum voto registrado ainda.</p>
+              )}
+            </div>
+
+            <div className="text-5xl md:text-6xl select-none shrink-0">
+              💖
             </div>
           </div>
         </div>

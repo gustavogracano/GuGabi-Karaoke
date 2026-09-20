@@ -541,7 +541,25 @@ export default function MobileControlPage() {
       });
 
       if (currentSong) {
-        if (emoji === "❤️" || emoji === "🔥") {
+        // Mapeia emoji para tipo de reação
+        const reactionTypeMap: Record<string, "heart" | "fire" | "clap" | "tomato"> = {
+          "❤️": "heart",
+          "🔥": "fire",
+          "👏": "clap",
+          "🍅": "tomato",
+        };
+        const mappedType = reactionTypeMap[emoji] || "heart";
+
+        // Salva o registro detalhado da reação individual (quem votou em quem)
+        await supabase
+          .from("karaoke_reactions")
+          .insert({
+            queue_id: currentSong.id,
+            voter_name: userName.trim() || "Anônimo",
+            reaction_type: mappedType,
+          });
+
+        if (emoji === "❤️" || emoji === "🔥" || emoji === "👏") {
           await supabase.rpc("increment_positive_votes", { queue_id: currentSong.id });
           setCurrentSong((prev) =>
             prev ? { ...prev, positive_votes: prev.positive_votes + 1 } : null
