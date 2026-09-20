@@ -58,38 +58,38 @@ const ALL_SOUNDS: SoundEffect[] = [
 ];
 
 const SOUND_NORMALIZATION: Record<SoundEffect, number> = {
-  // Sons naturalmente muito estridentes ou agudos (ajustados para serem altos e nítidos sem distorcer)
-  buzina: 0.90,
-  gong: 0.95,
-  pare: 1.10,
-  sirene: 0.95,
-  plantao: 1.05,
+  // Sons naturalmente muito estridentes ou agudos (ajustados para serem nítidos sem abafar a música)
+  buzina: 0.55,
+  gong: 0.60,
+  pare: 0.65,
+  sirene: 0.60,
+  plantao: 0.65,
 
-  // Efeitos cômicos e memes falados (precisam de presença e ganho expressivo para sobressair à música)
-  sino: 1.15,
-  brasil: 1.20,
-  coracao: 1.20,
-  danca_gatinho: 1.25,
-  cavalo: 1.25,
-  demais: 1.25,
-  ui: 1.30,
-  nao_e_o_pai: 1.25,
-  elegosta: 1.25,
-  chega: 1.25,
-  tetra: 1.25,
-  beijo: 1.30,
-  oloco: 1.25,
-  badumtss: 1.20,
-  grilo: 1.25,
+  // Efeitos cômicos e memes falados (equilibrados com a música)
+  sino: 0.65,
+  brasil: 0.68,
+  coracao: 0.68,
+  danca_gatinho: 0.70,
+  cavalo: 0.70,
+  demais: 0.70,
+  ui: 0.72,
+  nao_e_o_pai: 0.70,
+  elegosta: 0.70,
+  chega: 0.70,
+  tetra: 0.70,
+  beijo: 0.72,
+  oloco: 0.70,
+  badumtss: 0.68,
+  grilo: 0.68,
 
-  // Sons de palco e tomataço (ganho máximo de destaque)
-  errou: 1.30,
-  aplausos: 1.25,
-  uepa: 1.35,
-  rapaz: 1.35,
-  queisso: 1.35,
-  trompete_triste: 1.30,
-  splash: 1.35,
+  // Sons de palco e tomataço (audíveis e bem humorados, sem estourar)
+  errou: 0.75,
+  aplausos: 0.70,
+  uepa: 0.75,
+  rapaz: 0.75,
+  queisso: 0.75,
+  trompete_triste: 0.72,
+  splash: 0.75,
 };
 
 class SoundManager {
@@ -128,7 +128,7 @@ class SoundManager {
         this.compressor.release.setValueAtTime(0.18, this.audioCtx.currentTime);
 
         this.masterGainNode = this.audioCtx.createGain();
-        this.masterGainNode.gain.setValueAtTime(1.15, this.audioCtx.currentTime);
+        this.masterGainNode.gain.setValueAtTime(0.80, this.audioCtx.currentTime);
 
         // Cadeia: Source -> SoundGain -> Compressor -> MasterGain -> Speakers
         this.compressor.connect(this.masterGainNode);
@@ -176,7 +176,7 @@ class SoundManager {
   public setMasterVolume(vol: number) {
     this.masterVolume = Math.max(0, Math.min(1.5, vol));
     if (this.masterGainNode && this.audioCtx) {
-      this.masterGainNode.gain.setValueAtTime(this.masterVolume * 1.15, this.audioCtx.currentTime);
+      this.masterGainNode.gain.setValueAtTime(this.masterVolume * 0.80, this.audioCtx.currentTime);
     }
   }
 

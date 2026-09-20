@@ -229,23 +229,40 @@ export default function TVPage() {
 
     setEmojis((prev) => [...prev.slice(-45), ...newParticles]);
 
-    // Disparo Imediato e Impactante do Tomataço:
+    // Disparo Coletivo do Tomataço (requer pelo menos 3 tomates/pessoas):
     if (emoji === "🍅") {
       if (isTomatoSplatterActiveRef.current) {
         return;
       }
 
-      const isSolo = !!sender && sender !== "Alguém" && sender !== "Anônimo";
-      setTomatoAttackInfo({
-        isSolo: isSolo,
-        attackerName: isSolo ? sender : null,
-      });
+      const now = Date.now();
+      const validSender = sender && sender !== "Alguém" && sender !== "Anônimo" ? sender : `Anon_${Math.random().toString(36).slice(2, 6)}`;
+      
+      // Mantém histórico recente (últimos 35 segundos)
+      recentTomatoEventsRef.current = [
+        ...recentTomatoEventsRef.current.filter((e) => now - e.timestamp < 35000),
+        { timestamp: now, sender: validSender }
+      ];
 
-      // Abaixa o volume da música para o som de splatter e trompete triste do tomate estourarem com força
-      playerRef.current?.duckMusic?.(3800, 0.20);
+      // Conjunto de pessoas diferentes que jogaram tomate na janela de tempo
+      const uniqueSenders = new Set(recentTomatoEventsRef.current.map((e) => e.sender));
 
-      isTomatoSplatterActiveRef.current = true;
-      setIsTomatoSplatterActive(true);
+      // Só ativa o tomataço na tela se pelo menos 3 pessoas derem tomate
+      if (uniqueSenders.size >= 3 || recentTomatoEventsRef.current.length >= 3) {
+        setTomatoAttackInfo({
+          isSolo: false,
+          attackerName: null,
+        });
+
+        // Efeito sutil de ducking: reduz de leve a música (para 65%) para ouvir o trompete sem sumir a música
+        playerRef.current?.duckMusic?.(2400, 0.65);
+
+        isTomatoSplatterActiveRef.current = true;
+        setIsTomatoSplatterActive(true);
+
+        // Limpa o histórico após disparar
+        recentTomatoEventsRef.current = [];
+      }
     }
   }, []);
 
@@ -287,6 +304,7 @@ export default function TVPage() {
     if (!song) return;
 
     // Se o que terminou era uma música do Modo Festa:
+    recentTomatoEventsRef.current = [];
     if (song.id.startsWith("party_")) {
       advancePartySong();
       return;
@@ -422,9 +440,8 @@ export default function TVPage() {
               }
               lastMemeTimeRef.current = now;
 
-              // Ducking inteligente da música: abaixa temporariamente o volume do YouTube
-              // para o efeito sonoro soar com clareza e destaque total na sala!
-              playerRef.current?.duckMusic?.(2200, 0.35);
+              // Ducking suave da música: mantém a música tocando clara (65%) enquanto o meme soa sutil
+              playerRef.current?.duckMusic?.(2000, 0.65);
 
               soundManager.play(event.payload as SoundEffect);
               // Ativa o popup visual na TV
