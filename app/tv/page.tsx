@@ -69,6 +69,10 @@ export default function TVPage() {
   const [clearAllGossipsTrigger, setClearAllGossipsTrigger] = useState<number>(0);
   const [activeMeme, setActiveMeme] = useState<ActiveMeme | null>(null);
   const [isTomatoSplatterActive, setIsTomatoSplatterActive] = useState(false);
+  const [tomatoAttackInfo, setTomatoAttackInfo] = useState<{ isSolo: boolean; attackerName: string | null }>({
+    isSolo: false,
+    attackerName: null,
+  });
   const [isConnected, setIsConnected] = useState(false);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState<boolean>(() => {
@@ -81,8 +85,8 @@ export default function TVPage() {
   // Referência ao player para comandos remotos do anfitrião
   const playerRef = useRef<StagePlayerRef | null>(null);
 
-  // Registro de timestamps dos últimos tomates para acionar o tomataço (3+ tomates em 4s)
-  const recentTomatoesRef = useRef<number[]>([]);
+  // Registro de tomates com nome do autor para lógica inteligente de tomataço
+  const recentTomatoEventsRef = useRef<{ timestamp: number; sender: string }[]>([]);
   const isTomatoSplatterActiveRef = useRef(false);
 
   // Prevenção de sobreposição de sons na TV (mínimo 2.5s entre memes na TV)
@@ -196,7 +200,12 @@ export default function TVPage() {
   }, []);
 
   // 3. Gerenciamento de eventos de Emojis (Flutuando com destaque vibrante na TV)
-  const handleAddEmoji = useCallback((emoji: string) => {
+  const handleAddEmoji = useCallback((rawPayload: string) => {
+    // Formato suportado: "🍅:Gustavo" ou simplesmente "🍅"
+    const colonIndex = rawPayload.indexOf(":");
+    const emoji = colonIndex !== -1 ? rawPayload.substring(0, colonIndex) : rawPayload;
+    const sender = colonIndex !== -1 ? rawPayload.substring(colonIndex + 1).trim() : "Alguém";
+
     const burstCount = emoji === "🍅" ? 3 : 4;
     const newParticles: EmojiParticle[] = [];
 
@@ -220,22 +229,40 @@ export default function TVPage() {
 
     setEmojis((prev) => [...prev.slice(-45), ...newParticles]);
 
-    // Regra do tomataço: 3+ tomates em menos de 4s (com bloqueio estrito contra duplicação)
+    // Regra Inteligente do Tomataço:
+    // Analisa quem jogou nos últimos 5 segundos:
+    // - Se 2+ pessoas diferentes jogarem: TOMATAÇO GERAL DA GALERA!
+    // - Se 1 única pessoa jogar 4+ tomates rápidos: TOMATADA SOLO (Dedura o nome do hater!)
     if (emoji === "🍅") {
-      // Se já estiver ativo na tela, descarta novos disparos para não sobrepor áudio
       if (isTomatoSplatterActiveRef.current) {
         return;
       }
 
       const now = Date.now();
-      recentTomatoesRef.current = [
-        ...recentTomatoesRef.current.filter((t) => now - t < 4000),
-        now,
+      const updatedEvents = [
+        ...recentTomatoEventsRef.current.filter((t) => now - t.timestamp < 5000),
+        { timestamp: now, sender: sender || "Anônimo" },
       ];
-      if (recentTomatoesRef.current.length >= 3) {
+      recentTomatoEventsRef.current = updatedEvents;
+
+      const uniqueSenders = new Set(updatedEvents.map((e) => e.sender.toLowerCase()));
+
+      // Condição A: 2 ou mais pessoas diferentes jogaram tomate nos últimos 5s
+      const isCollectiveAttack = uniqueSenders.size >= 2 && updatedEvents.length >= 3;
+
+      // Condição B: 1 pessoa só jogou 4 ou mais tomates seguidos
+      const isSoloHaterAttack = uniqueSenders.size === 1 && updatedEvents.length >= 4;
+
+      if (isCollectiveAttack || isSoloHaterAttack) {
+        const primaryAttacker = isSoloHaterAttack ? updatedEvents[0]?.sender || null : null;
+        setTomatoAttackInfo({
+          isSolo: isSoloHaterAttack,
+          attackerName: primaryAttacker,
+        });
+
         isTomatoSplatterActiveRef.current = true;
         setIsTomatoSplatterActive(true);
-        recentTomatoesRef.current = [];
+        recentTomatoEventsRef.current = [];
       }
     }
   }, []);
@@ -554,12 +581,15 @@ export default function TVPage() {
       {/* Popups Visuais dos Memes na TV sincronizados com os botões de som */}
       <MemePopup meme={activeMeme} />
 
-      {/* Efeito Tomataço com Tremor de Tela */}
+      {/* Efeito Tomataço com Tremor de Tela e Lógica Inteligente */}
       <TomatoSplatter
         active={isTomatoSplatterActive}
+        attackerName={tomatoAttackInfo.attackerName}
+        isSoloAttack={tomatoAttackInfo.isSolo}
         onFinished={() => {
           isTomatoSplatterActiveRef.current = false;
           setIsTomatoSplatterActive(false);
+          setTomatoAttackInfo({ isSolo: false, attackerName: null });
         }}
       />
 

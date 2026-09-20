@@ -103,11 +103,22 @@ export function SideQueue({ currentSong, pendingSongs, nextPartyTrack }: SideQue
                 </span>
               </div>
 
-              <div className="flex items-center justify-center gap-1.5 bg-red-950/40 border border-red-500/30 py-1 px-2 rounded-lg shadow-inner">
-                <span className="text-sm">🍅</span>
-                <span className="text-sm font-black text-red-300 font-mono">
-                  {currentSong.tomatoes}
-                </span>
+              <div className="flex flex-col justify-center bg-red-950/40 border border-red-500/30 py-1 px-2 rounded-lg shadow-inner">
+                <div className="flex items-center justify-center gap-1.5">
+                  <span className="text-sm">🍅</span>
+                  <span className="text-sm font-black text-red-300 font-mono">
+                    {currentSong.tomatoes}
+                  </span>
+                </div>
+                {/* Mini Tomatômetro da música atual (meta de 5 tomates) */}
+                <div className="w-full bg-black/40 h-1 rounded-full overflow-hidden mt-0.5 border border-red-500/20">
+                  <div
+                    className="h-full bg-gradient-to-r from-red-600 to-rose-400 transition-all duration-300 rounded-full"
+                    style={{
+                      width: `${Math.min(100, ((currentSong.tomatoes % 5 === 0 && currentSong.tomatoes > 0 ? 5 : currentSong.tomatoes % 5) / 5) * 100)}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

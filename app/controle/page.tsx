@@ -534,9 +534,10 @@ export default function MobileControlPage() {
     if (!isSupabaseConfigured()) return;
 
     try {
+      const emojiPayload = userName.trim() ? `${emoji}:${userName.trim()}` : emoji;
       await supabase.from("karaoke_events").insert({
         type: "emoji",
-        payload: emoji,
+        payload: emojiPayload,
       });
 
       if (currentSong) {

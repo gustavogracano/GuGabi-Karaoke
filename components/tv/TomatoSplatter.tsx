@@ -6,9 +6,11 @@ import { soundManager } from "@/lib/sound-manager";
 interface TomatoSplatterProps {
   active: boolean;
   onFinished: () => void;
+  attackerName?: string | null;
+  isSoloAttack?: boolean;
 }
 
-export function TomatoSplatter({ active, onFinished }: TomatoSplatterProps) {
+export function TomatoSplatter({ active, onFinished, attackerName, isSoloAttack }: TomatoSplatterProps) {
   const [shaking, setShaking] = useState(false);
   const hasTriggeredAudioRef = useRef(false);
 
@@ -86,12 +88,16 @@ export function TomatoSplatter({ active, onFinished }: TomatoSplatterProps) {
           <div className="absolute inset-0 bg-red-600/50 rounded-full filter blur-3xl -z-10" />
         </div>
 
-        <div className="mt-4 px-10 py-4 bg-gradient-to-r from-red-700 via-red-600 to-red-800 border-4 border-white/95 rounded-3xl shadow-[0_0_80px_rgba(255,0,0,1)] transform -rotate-2">
-          <h2 className="text-4xl md:text-7xl font-black text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.95)]">
-            💥 TOMATAÇO GERAL! 💥
+        <div className="mt-4 px-8 sm:px-10 py-4 bg-gradient-to-r from-red-700 via-red-600 to-red-800 border-4 border-white/95 rounded-3xl shadow-[0_0_80px_rgba(255,0,0,1)] transform -rotate-2 max-w-4xl mx-auto">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.95)] leading-tight">
+            {isSoloAttack && attackerName
+              ? `🎯 TOMATADA DE ${attackerName.toUpperCase()}!`
+              : "💥 TOMATAÇO GERAL DA GALERA! 💥"}
           </h2>
-          <p className="text-xl md:text-3xl font-black text-yellow-300 drop-shadow mt-1">
-            A plateia não perdoou! Alguém desliga esse microfone! 😂🍅
+          <p className="text-lg sm:text-2xl md:text-3xl font-black text-yellow-300 drop-shadow mt-1.5 leading-snug">
+            {isSoloAttack && attackerName
+              ? `Hater alert! ${attackerName} pegou ranço e jogou tomate sozinho na TV! 🤣🍅`
+              : "Consenso unânime da plateia: alguém desliga esse microfone! 😂🍅"}
           </p>
         </div>
       </div>
