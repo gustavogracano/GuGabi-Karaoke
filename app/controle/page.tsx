@@ -81,6 +81,12 @@ export default function MobileControlPage() {
   const [isSendingGossip, setIsSendingGossip] = useState<boolean>(false);
   const [gossipSuccess, setGossipSuccess] = useState<boolean>(false);
   const [includeNameInGossip, setIncludeNameInGossip] = useState<boolean>(true);
+  const [lastSeenGossipId, setLastSeenGossipId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("gukaraoke_last_seen_gossip_id");
+    }
+    return null;
+  });
 
   // Votação para Pular Música
   const [hasVotedSkip, setHasVotedSkip] = useState<string | null>(null); // song_id que votou pular
@@ -149,6 +155,17 @@ export default function MobileControlPage() {
 
   // Aba Ativa
   const [activeTab, setActiveTab] = useState<"pedir" | "fila" | "mesa" | "fofoca">("pedir");
+
+  // Marca fofocas como lidas assim que o usuário entra na aba de fofocas
+  useEffect(() => {
+    if (activeTab === "fofoca" && gossips.length > 0) {
+      const newestId = gossips[0].id;
+      setLastSeenGossipId(newestId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("gukaraoke_last_seen_gossip_id", newestId);
+      }
+    }
+  }, [activeTab, gossips]);
 
   // 1. Carrega Perfil e Admin do LocalStorage
   useEffect(() => {
@@ -1441,9 +1458,15 @@ export default function MobileControlPage() {
           >
             <span className="text-xs">🔥</span>
             <span className="truncate">Tretas & Fofoca</span>
-            {gossips.length > 0 && activeTab !== "fofoca" && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-400 animate-ping" />
-            )}
+            {/* Só pisca se houver fofoca nova que o usuário ainda não viu */}
+            {gossips.length > 0 &&
+              activeTab !== "fofoca" &&
+              (!lastSeenGossipId || gossips[0].id !== lastSeenGossipId) && (
+                <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-80" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-400" />
+                </span>
+              )}
           </button>
         </div>
       </div>
