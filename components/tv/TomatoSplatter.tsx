@@ -13,10 +13,14 @@ interface TomatoSplatterProps {
 export function TomatoSplatter({ active, onFinished, attackerName, isSoloAttack }: TomatoSplatterProps) {
   const [shaking, setShaking] = useState(false);
   const hasTriggeredAudioRef = useRef(false);
+  const onFinishedRef = useRef(onFinished);
+
+  useEffect(() => {
+    onFinishedRef.current = onFinished;
+  }, [onFinished]);
 
   useEffect(() => {
     if (active) {
-      // Dispara o som uma única vez por ativação (evita duplicação em re-renders)
       if (!hasTriggeredAudioRef.current) {
         hasTriggeredAudioRef.current = true;
         soundManager.play("splash");
@@ -27,10 +31,9 @@ export function TomatoSplatter({ active, onFinished, attackerName, isSoloAttack 
         setShaking(true);
         const shakeTimer = setTimeout(() => setShaking(false), 700);
 
-        // Tempo estendido na tela para dar tempo de ler a mensagem confortavelmente
         const endTimer = setTimeout(() => {
-          onFinished();
-        }, 5400);
+          onFinishedRef.current();
+        }, 5000);
 
         return () => {
           clearTimeout(trompeteTimer);
@@ -42,7 +45,7 @@ export function TomatoSplatter({ active, onFinished, attackerName, isSoloAttack 
       hasTriggeredAudioRef.current = false;
       setShaking(false);
     }
-  }, [active, onFinished]);
+  }, [active]);
 
   if (!active) return null;
 

@@ -149,7 +149,6 @@ export function SideQueue({ currentSong, pendingSongs, nextPartyTrack }: SideQue
           <div className="space-y-1.5 overflow-y-auto pr-0.5 flex-1 min-h-0">
             {nextFive.length > 0 ? (
               nextFive.map((song, index) => {
-                const tag = getTagInfo(song.singer_tag);
                 const positionLabel = index === 0 ? "A Seguir" : `${index + 1}º da Fila`;
 
                 return (
@@ -194,17 +193,11 @@ export function SideQueue({ currentSong, pendingSongs, nextPartyTrack }: SideQue
                       {song.title}
                     </p>
 
-                    <div className="flex items-center justify-between mt-1 pt-1 border-t border-white/5 text-[10px]">
-                      <span className="font-semibold text-slate-300 truncate max-w-[110px]">
-                        🎙️ {song.singer_name}
+                    <div className="flex items-center justify-between mt-1 pt-1 border-t border-white/5 text-[11px]">
+                      <span className="font-semibold text-slate-300 truncate w-full flex items-center gap-1">
+                        <span>🎙️</span>
+                        <span className="truncate">{song.singer_name}</span>
                       </span>
-                      {tag && (
-                        <span
-                          className={`text-[9px] font-medium px-1.5 py-0.2 rounded-full border truncate max-w-[80px] ${tag.color}`}
-                        >
-                          {tag.emoji} {tag.label}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
