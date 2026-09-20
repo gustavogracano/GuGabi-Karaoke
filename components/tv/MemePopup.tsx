@@ -299,25 +299,31 @@ export function MemePopup({ meme }: MemePopupProps) {
   if (!visible || !currentConfig) return null;
 
   return (
-    <div className="fixed top-20 right-6 md:right-10 z-[95] pointer-events-none select-none animate-in slide-in-from-right-8 fade-in duration-250">
+    <div className="fixed top-24 right-6 md:right-8 z-[95] pointer-events-none select-none max-w-sm md:max-w-md w-full animate-in slide-in-from-right-10 fade-in duration-300">
       <div
-        className={`relative flex items-center gap-3.5 px-6 py-3.5 rounded-2xl border-2 ${currentConfig.borderColor} bg-gradient-to-r ${currentConfig.bgGradient} ${currentConfig.shadowColor} backdrop-blur-xl shadow-2xl transform scale-105`}
+        className={`relative flex items-center gap-4 px-6 py-4 rounded-3xl border-3 ${currentConfig.borderColor} bg-gradient-to-r ${currentConfig.bgGradient} ${currentConfig.shadowColor} backdrop-blur-2xl shadow-2xl transform transition-all animate-[bounce_1.2s_ease-in-out_infinite]`}
       >
-        {/* Glow sutil */}
-        <div className="absolute inset-0 rounded-2xl bg-white/10 blur-sm pointer-events-none" />
+        {/* Glow de fundo */}
+        <div className="absolute inset-0 rounded-3xl bg-white/10 blur-md pointer-events-none" />
 
-        {/* Emoji de impacto */}
-        <span className="text-4xl md:text-5xl filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+        {/* Emoji Animado */}
+        <div className="text-5xl md:text-6xl shrink-0 filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] animate-pulse">
           {currentConfig.emoji}
-        </span>
+        </div>
 
-        {/* Frase / Título clássico */}
-        <div className="flex flex-col text-left">
-          <span
-            className={`text-xl md:text-2xl font-black tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] ${currentConfig.textColor}`}
+        {/* Texto do Meme em formato Toast Lateral */}
+        <div className="flex flex-col text-left min-w-0">
+          <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/90 bg-black/40 px-2.5 py-0.5 rounded-full w-fit mb-1 border border-white/20">
+            ⚡ Reação ao Vivo da Galera
+          </span>
+          <h2
+            className={`text-2xl md:text-3xl font-black tracking-tight leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] ${currentConfig.textColor}`}
           >
             {currentConfig.title}
-          </span>
+          </h2>
+          <p className="text-xs md:text-sm font-black text-white/95 mt-1 drop-shadow-md truncate">
+            {currentConfig.subtitle}
+          </p>
         </div>
       </div>
     </div>
