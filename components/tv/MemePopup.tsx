@@ -287,7 +287,7 @@ export function MemePopup({ meme }: MemePopupProps) {
         } catch {}
       }
 
-      const displayDuration = meme.type === "errou" || meme.type === "brasil" ? 3600 : 2800;
+      const displayDuration = meme.type === "errou" || meme.type === "brasil" || meme.type === "tetra" ? 2200 : 1700;
       const timer = setTimeout(() => {
         setVisible(false);
       }, displayDuration);
