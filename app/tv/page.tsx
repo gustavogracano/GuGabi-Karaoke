@@ -83,6 +83,7 @@ export default function TVPage() {
 
   // Registro de timestamps dos últimos tomates para acionar o tomataço (3+ tomates em 4s)
   const recentTomatoesRef = useRef<number[]>([]);
+  const isTomatoSplatterActiveRef = useRef(false);
 
   // Prevenção de sobreposição de sons na TV (mínimo 2.5s entre memes na TV)
   const lastMemeTimeRef = useRef<number>(0);
@@ -219,14 +220,20 @@ export default function TVPage() {
 
     setEmojis((prev) => [...prev.slice(-45), ...newParticles]);
 
-    // Regra do tomataço: 3+ tomates em menos de 4.5s
+    // Regra do tomataço: 3+ tomates em menos de 4s (com bloqueio estrito contra duplicação)
     if (emoji === "🍅") {
+      // Se já estiver ativo na tela, descarta novos disparos para não sobrepor áudio
+      if (isTomatoSplatterActiveRef.current) {
+        return;
+      }
+
       const now = Date.now();
       recentTomatoesRef.current = [
         ...recentTomatoesRef.current.filter((t) => now - t < 4000),
         now,
       ];
       if (recentTomatoesRef.current.length >= 3) {
+        isTomatoSplatterActiveRef.current = true;
         setIsTomatoSplatterActive(true);
         recentTomatoesRef.current = [];
       }
@@ -550,7 +557,10 @@ export default function TVPage() {
       {/* Efeito Tomataço com Tremor de Tela */}
       <TomatoSplatter
         active={isTomatoSplatterActive}
-        onFinished={() => setIsTomatoSplatterActive(false)}
+        onFinished={() => {
+          isTomatoSplatterActiveRef.current = false;
+          setIsTomatoSplatterActive(false);
+        }}
       />
 
       {/* Badge flutuante de Modo Cinema */}

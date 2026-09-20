@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { soundManager } from "@/lib/sound-manager";
 
 interface TomatoSplatterProps {
@@ -10,25 +10,35 @@ interface TomatoSplatterProps {
 
 export function TomatoSplatter({ active, onFinished }: TomatoSplatterProps) {
   const [shaking, setShaking] = useState(false);
+  const hasTriggeredAudioRef = useRef(false);
 
   useEffect(() => {
     if (active) {
-      soundManager.play("splash");
-      const trompeteTimer = setTimeout(() => {
-        soundManager.play("trompete_triste");
-      }, 400);
-      setShaking(true);
+      // Dispara o som uma única vez por ativação (evita duplicação em re-renders)
+      if (!hasTriggeredAudioRef.current) {
+        hasTriggeredAudioRef.current = true;
+        soundManager.play("splash");
+        const trompeteTimer = setTimeout(() => {
+          soundManager.play("trompete_triste");
+        }, 550);
 
-      const shakeTimer = setTimeout(() => setShaking(false), 600);
-      const endTimer = setTimeout(() => {
-        onFinished();
-      }, 3800);
+        setShaking(true);
+        const shakeTimer = setTimeout(() => setShaking(false), 700);
 
-      return () => {
-        clearTimeout(trompeteTimer);
-        clearTimeout(shakeTimer);
-        clearTimeout(endTimer);
-      };
+        // Tempo estendido na tela para dar tempo de ler a mensagem confortavelmente
+        const endTimer = setTimeout(() => {
+          onFinished();
+        }, 5400);
+
+        return () => {
+          clearTimeout(trompeteTimer);
+          clearTimeout(shakeTimer);
+          clearTimeout(endTimer);
+        };
+      }
+    } else {
+      hasTriggeredAudioRef.current = false;
+      setShaking(false);
     }
   }, [active, onFinished]);
 

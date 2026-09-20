@@ -25,7 +25,7 @@ const config: Config = {
       },
       animation: {
         "float-up": "floatUp 3.2s cubic-bezier(0.25, 1, 0.5, 1) both",
-        "splat-fade": "splatFade 2.5s ease-out forwards",
+        "splat-fade": "splatFade 5.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "pulse-glow": "pulseGlow 2s infinite",
         "ticker": "ticker 20s linear infinite",
       },
@@ -39,11 +39,12 @@ const config: Config = {
           "100%": { transform: "translate3d(10px, -118vh, 0) scale(0.85) rotate(-4deg)", opacity: "0" },
         },
         splatFade: {
-          "0%": { transform: "scale(0.2) rotate(-15deg)", opacity: "0" },
-          "12%": { transform: "scale(1.12) rotate(4deg)", opacity: "1" },
-          "25%": { transform: "scale(0.97) rotate(-2deg)", opacity: "1" },
-          "80%": { transform: "scale(1.0) rotate(0deg)", opacity: "0.95" },
-          "100%": { transform: "scale(1.08) translateY(12px)", opacity: "0" },
+          "0%": { transform: "scale(0.3) rotate(-12deg)", opacity: "0" },
+          "6%": { transform: "scale(1.08) rotate(3deg)", opacity: "1" },
+          "12%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
+          "80%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
+          "92%": { transform: "scale(1.03)", opacity: "0.8" },
+          "100%": { transform: "scale(1.06) translateY(10px)", opacity: "0" },
         },
         pulseGlow: {
           "0%, 100%": { boxShadow: "0 0 15px rgba(255, 0, 127, 0.4)" },
