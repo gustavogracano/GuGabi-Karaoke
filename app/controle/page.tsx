@@ -2303,24 +2303,75 @@ export default function MobileControlPage() {
                     <span className="text-xs font-black text-slate-300 block">
                       Moderação & Privilégios VIP
                     </span>
-                    <button
-                      onClick={() => {
-                        setGoldenTicketUsed(false);
-                        setUseGoldenTicket(true);
-                        setAddedSuccessMessage("Golden Ticket liberado para você usar agora! 🎟️✨");
-                        setTimeout(() => setAddedSuccessMessage(null), 3500);
-                      }}
-                      className="w-full py-2.5 px-3 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 rounded-xl flex items-center justify-center gap-2 text-xs font-black shadow transition-all active:scale-95"
-                    >
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span>Liberar Golden Ticket Para Mim 🎟️</span>
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          setGoldenTicketUsed(false);
+                          setUseGoldenTicket(true);
+                          setAddedSuccessMessage("Golden Ticket liberado para você usar agora! 🎟️✨");
+                          setTimeout(() => setAddedSuccessMessage(null), 3500);
+                        }}
+                        className="py-2.5 px-2 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 rounded-xl flex items-center justify-center gap-1.5 text-xs font-black shadow transition-all active:scale-95"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Meu Ticket 🎟️</span>
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Deseja renovar o Golden Ticket de TODOS os convidados agora?")) return;
+                          if (isSupabaseConfigured()) {
+                            try {
+                              // Remove a marcação de prioridade das músicas anteriores para liberar novo ticket a todos
+                              await supabase
+                                .from("karaoke_queue")
+                                .update({ is_priority: false })
+                                .eq("is_priority", true);
+                              fetchData();
+                            } catch (e) {
+                              console.error("Erro ao renovar tickets:", e);
+                            }
+                          }
+                          setGoldenTicketUsed(false);
+                          setAddedSuccessMessage("Golden Tickets renovados para TODOS os convidados! 🎉🎟️");
+                          setTimeout(() => setAddedSuccessMessage(null), 4000);
+                        }}
+                        className="py-2.5 px-2 bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/40 hover:to-yellow-600/40 border border-amber-500/40 text-yellow-200 rounded-xl flex items-center justify-center gap-1.5 text-xs font-black shadow transition-all active:scale-95"
+                      >
+                        <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>Renovar de Todos 🎟️</span>
+                      </button>
+                    </div>
+
                     <button
                       onClick={handleClearAllGossips}
                       className="w-full py-2.5 px-3 bg-yellow-500/15 hover:bg-yellow-500/25 border border-yellow-500/35 text-yellow-300 rounded-xl flex items-center justify-center gap-2 text-xs font-black shadow transition-all active:scale-95"
                     >
                       <Trash2 className="w-4 h-4 text-yellow-400" />
                       <span>Limpar Todas as Fofocas do Rodapé</span>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        if (!confirm("⚠️ ATENÇÃO: Deseja apagar todas as músicas do relatório, fila e fofocas para começar uma FESTA TOTALMENTE NOVA? (Essa ação zera o placar e renova o Golden Ticket de todo mundo)")) return;
+                        if (isSupabaseConfigured()) {
+                          try {
+                            await supabase.from("karaoke_queue").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            await supabase.from("karaoke_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            await supabase.from("karaoke_reactions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            fetchData();
+                          } catch (e) {
+                            console.error("Erro ao resetar festa:", e);
+                          }
+                        }
+                        setGoldenTicketUsed(false);
+                        setAddedSuccessMessage("Festa reiniciada! Relatório, fila e Golden Tickets zerados com sucesso! 🏆✨");
+                        setTimeout(() => setAddedSuccessMessage(null), 4000);
+                      }}
+                      className="w-full py-2.5 px-3 bg-red-600/20 hover:bg-red-600/35 border border-red-500/40 text-red-300 rounded-xl flex items-center justify-center gap-2 text-xs font-black shadow transition-all active:scale-95"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <span>Zerar Relatório & Iniciar Nova Festa 🚀</span>
                     </button>
                   </div>
 

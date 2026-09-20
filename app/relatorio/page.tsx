@@ -137,11 +137,12 @@ export default function RelatorioPage() {
       if (isSupabaseConfigured()) {
         await supabase.from("karaoke_queue").delete().neq("id", "00000000-0000-0000-0000-000000000000");
         await supabase.from("karaoke_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        await supabase.from("karaoke_reactions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
       }
       setFinishedSongs([]);
       setGossips([]);
       setShowClearModal(false);
-      alert("Sessão resetada com sucesso!");
+      alert("Festa e relatório resetados com sucesso! Golden Tickets renovados para todos!");
     } catch (err) {
       console.error("Erro ao resetar:", err);
     } finally {
