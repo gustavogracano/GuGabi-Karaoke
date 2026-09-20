@@ -1409,14 +1409,14 @@ export default function MobileControlPage() {
             onClick={() => setActiveTab("fofoca")}
             className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap relative ${
               activeTab === "fofoca"
-                ? "bg-pink-600 text-white shadow"
-                : "text-slate-400 hover:text-white"
+                ? "bg-gradient-to-r from-amber-500 to-pink-600 text-white shadow-lg font-black"
+                : "text-amber-400/90 hover:text-yellow-300"
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5 shrink-0 text-yellow-400" />
-            <span className="truncate">Fofocas</span>
+            <span className="text-xs">🔥</span>
+            <span className="truncate">Tretas & Fofoca</span>
             {gossips.length > 0 && activeTab !== "fofoca" && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-400 animate-ping" />
             )}
           </button>
         </div>
@@ -1993,65 +1993,105 @@ export default function MobileControlPage() {
         {/* ================= ABA 4: FOFOCAS & EXPOSED ================= */}
         {activeTab === "fofoca" && (
           <div className="space-y-6">
-            {/* Enviar Fofoca */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
+            {/* Enviar Fofoca e Tretas */}
+            <div className="bg-gradient-to-b from-amber-500/10 via-pink-500/10 to-transparent border border-amber-500/30 p-3.5 sm:p-4 rounded-2xl relative overflow-hidden shadow-lg">
+              {/* Glow sutil */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full filter blur-2xl pointer-events-none" />
+
+              <div className="flex items-center justify-between mb-2">
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-yellow-400 flex items-center gap-1.5">
-                    <Radio className="w-4 h-4 animate-pulse" />
-                    <span>Enviar Fofoca ao Vivo</span>
+                  <h3 className="text-sm font-black uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-pink-400 flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
+                    <span>Mural Secreto: Fofoca & Exposed 🔥</span>
                   </h3>
-                  <p className="text-[10px] text-slate-400 ml-5.5">
-                    (Aparece no rodapé da TV)
+                  <p className="text-[11px] text-slate-300 font-medium mt-0.5">
+                    100% anônimo! Solte exposed, tretas da mesa e indiretas na TV.
                   </p>
                 </div>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[11px] font-mono text-slate-400 bg-black/40 px-2 py-0.5 rounded-full border border-white/10 shrink-0">
                   {gossipText.length}/60
                 </span>
               </div>
 
-              <form onSubmit={handleSendGossip} className="space-y-2">
+              {/* Botões de sugestão / inspiração rápida para esquentar a treta */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar text-[11px]">
+                <span className="text-slate-400 text-[10px] uppercase font-bold shrink-0">Ideias:</span>
+                <button
+                  type="button"
+                  onClick={() => setGossipText("Gente, quem é aquele casal no fundo? 👀")}
+                  className="bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/10 transition-all font-semibold"
+                >
+                  👀 Casal secreto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGossipText("Alguém confisca o microfone dele pelo amor de Deus! 😂")}
+                  className="bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/10 transition-all font-semibold"
+                >
+                  🎤 Tira o microfone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGossipText("Exposed: fulano fingiu que sabia a letra todinha! 🤥")}
+                  className="bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/10 transition-all font-semibold"
+                >
+                  🤥 Não sabe a letra
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGossipText("Cadê a saideira que prometeram 1 hora atrás? 🍻")}
+                  className="bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap border border-white/10 transition-all font-semibold"
+                >
+                  🍻 Cadê o chopp?
+                </button>
+              </div>
+
+              <form onSubmit={handleSendGossip} className="space-y-2.5">
                 <div className="relative">
                   <input
                     type="text"
                     maxLength={60}
                     value={gossipText}
                     onChange={(e) => setGossipText(e.target.value)}
-                    placeholder="Escreva uma fofoca ou exposed da galera..."
-                    className="w-full bg-slate-900/60 border border-white/15 focus:border-yellow-400 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-slate-500 outline-none transition-all backdrop-blur-md"
+                    placeholder="Mande uma treta, fofoca ou exposed anônimo..."
+                    className="w-full bg-slate-950/80 border-2 border-amber-500/40 focus:border-yellow-400 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-slate-400 outline-none transition-all shadow-inner"
                   />
                   <button
                     type="submit"
                     disabled={isSendingGossip || !gossipText.trim()}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-black rounded-xl transition-all active:scale-90"
+                    title="Mandar para o telão da TV"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-xl transition-all active:scale-90 flex items-center gap-1 shadow"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+
+                <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setIncludeNameInGossip(!includeNameInGossip)}
-                      className={`text-[11px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 font-bold ${
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1.5 font-bold shadow-sm ${
                         includeNameInGossip && userName.trim()
-                          ? "bg-pink-500/20 text-pink-300 border-pink-500/40"
-                          : "bg-slate-800 text-slate-400 border-white/10"
+                          ? "bg-pink-500/25 text-pink-300 border-pink-500/50"
+                          : "bg-slate-900/90 text-emerald-400 border-emerald-500/40"
                       }`}
                     >
                       {includeNameInGossip && userName.trim() ? (
-                        <>✍️ Por: <span className="text-white">{userName.trim()}</span></>
+                        <>✍️ Assinar como: <span className="text-white underline">{userName.trim()}</span></>
                       ) : (
-                        <>🕵️ Fofoca Anônima</>
+                        <>🕵️ MODO ANÔNIMO ATIVO (Ninguém vai saber)</>
                       )}
                     </button>
-                    <span className="text-slate-400">• 5s em destaque no telão</span>
                   </div>
+                  <span className="text-[11px] text-slate-400 hidden sm:inline">📺 Aparece na TV ao vivo</span>
                 </div>
+
                 {gossipSuccess && (
-                  <p className="text-xs text-yellow-300 flex items-center gap-1 font-semibold animate-pulse">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Fofoca enviada para o telão!
-                  </p>
+                  <div className="p-2.5 bg-yellow-500/20 border border-yellow-500/40 rounded-xl flex items-center gap-2 text-yellow-300 text-xs font-bold animate-pulse">
+                    <CheckCircle2 className="w-4 h-4 text-yellow-400 shrink-0" />
+                    <span>Bomba enviada com sucesso! Tá passando no rodapé da TV agora! 🤫🔥</span>
+                  </div>
                 )}
               </form>
             </div>

@@ -37,8 +37,9 @@ const TIMER_TICK_MS = 50;
 const IDLE_PARTY_TIPS = [
   "✨ Bem-vindos ao Karaokê do Gu & Gabi! 🎤🎉",
   "📱 Aponte a câmera pro QR Code e escolha o que quer cantar!",
-  "🤫 Fofoca VIP: Mande um babado anônimo pelo celular e veja aqui na TV!",
-  "🍅 Se o cantor desafinar, a galera pode jogar tomate pelo celular!",
+  "🤫 Fofoca & Treta VIP: Mande um exposed 100% anônimo pelo celular e veja aqui na TV! 🔥",
+  "🔥 Sabe de um babado da galera? Vá na aba 'Tretas & Fofoca' no celular e solte a bomba!",
+  "🍅 Se o cantor desafinar feio, a galera pode jogar tomate pelo celular!",
   "👑 Golden Ticket: Seu passe VIP para furar a fila e cantar antes!",
   "🎤 Afinação é detalhe, a emoção e o gogó são obrigatórios!",
   "🔥 O Mais Votado e o Mais Cancelado da noite vão pro Relatório!",
@@ -256,7 +257,7 @@ export function StageBottomBar({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-80" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500" />
               </span>
-              <span>FOFOCA VIP</span>
+              <span>FOFOCA & TRETA VIP</span>
               <Flame className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400 animate-pulse" />
             </div>
 
