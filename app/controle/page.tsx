@@ -1911,20 +1911,10 @@ export default function MobileControlPage() {
           <div className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-pink-400 flex items-center gap-1.5">
-                    <Volume2 className="w-4 h-4" />
-                    <span>Mesa de Som</span>
-                  </h3>
-                  <p className="text-[10px] text-slate-400 ml-5.5">
-                    (Toca na TV da Sala)
-                  </p>
-                </div>
-                {isAdminAuthenticated && (
-                  <span className="text-[10px] bg-yellow-500/20 text-yellow-300 font-bold px-2 py-0.5 rounded-full border border-yellow-500/30 flex items-center gap-1 shrink-0">
-                    <Crown className="w-3 h-3 text-yellow-400" /> Modo Livre
-                  </span>
-                )}
+                <h3 className="text-xs font-black uppercase tracking-wider text-pink-400 flex items-center gap-1.5">
+                  <Volume2 className="w-4 h-4" />
+                  <span>Mesa de Som (Toca na TV da Sala)</span>
+                </h3>
               </div>
 
               {/* Aviso de respiro apenas se o convidado mandar 3 sons seguidos rápidos */}
