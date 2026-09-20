@@ -2402,62 +2402,89 @@ export default function MobileControlPage() {
 
       {/* MODAL DE IDENTIFICAÇÃO DO CANTOR */}
       {isEditingProfile && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-pink-500/40 rounded-3xl p-6 w-full max-w-sm shadow-[0_0_40px_rgba(255,0,127,0.3)]">
-            <div className="text-center mb-4">
-              <div className="w-14 h-14 mx-auto rounded-full bg-pink-600 flex items-center justify-center shadow-lg mb-2 text-2xl">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-pink-500/40 rounded-3xl p-4 sm:p-6 w-full max-w-sm max-h-[92vh] flex flex-col shadow-[0_0_40px_rgba(255,0,127,0.3)]">
+            <div className="text-center mb-3 shrink-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg mb-2 text-2xl">
                 🎙️
               </div>
-              <h2 className="text-xl font-black text-white">Identifique-se, Astro!</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h2 className="text-lg sm:text-xl font-black text-white">Identifique-se, Astro!</h2>
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                 Escolha seu nome de palco e sua tag cômica.
               </p>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3 flex-1 overflow-y-auto pr-1 min-h-0">
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">
+                <label className="text-[11px] sm:text-xs font-bold text-slate-300 block mb-1">
                   Seu Nome ou Apelido:
                 </label>
                 <input
                   type="text"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Ex: Paulinho, Maria..."
-                  className="w-full bg-black/40 border border-white/20 focus:border-pink-500 rounded-xl p-3 text-sm text-white outline-none"
+                  placeholder="Ex: Paulinho, Maria, Gu..."
+                  className="w-full bg-black/50 border border-white/20 focus:border-pink-500 rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-white outline-none transition-all placeholder:text-slate-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">
-                  Sua Personalidade ({COMIC_TAGS.length} opções):
-                </label>
-                <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
-                  {COMIC_TAGS.map((tag) => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => setUserTag(tag.id)}
-                      className={`p-2 rounded-xl text-left border text-xs flex items-center gap-1.5 transition-all ${
-                        userTag === tag.id
-                          ? "bg-pink-600 text-white border-pink-400 font-bold shadow"
-                          : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
-                      }`}
-                    >
-                      <span className="text-base">{tag.emoji}</span>
-                      <span className="truncate">{tag.label}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-300">
+                    Sua Personalidade:
+                  </label>
+                  <span className="text-[10px] text-pink-300 font-mono bg-pink-500/20 px-1.5 py-0.5 rounded-md border border-pink-500/30">
+                    {COMIC_TAGS.length} opções
+                  </span>
+                </div>
+
+                {/* Tag Selecionada em Destaque */}
+                {userTag && (
+                  <div className="mb-2 p-2 rounded-xl bg-pink-600/20 border border-pink-500/40 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-white font-bold">
+                      <span className="text-base">{selectedTagObj.emoji}</span>
+                      <span>{selectedTagObj.label}</span>
+                    </div>
+                    <span className="text-[10px] text-pink-300 uppercase font-black tracking-wider">
+                      Selecionado ✓
+                    </span>
+                  </div>
+                )}
+
+                {/* Grade Otimizada com Altura Dinâmica e Scroll Fluido */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto pr-1">
+                  {COMIC_TAGS.map((tag) => {
+                    const isSelected = userTag === tag.id;
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => setUserTag(tag.id)}
+                        className={`p-2 rounded-xl text-left border text-xs flex items-center gap-1.5 transition-all active:scale-95 ${
+                          isSelected
+                            ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white border-pink-400 font-bold shadow-md ring-1 ring-pink-400"
+                            : "bg-white/5 text-slate-200 border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="text-base shrink-0">{tag.emoji}</span>
+                        <span className="text-[11px] font-semibold leading-tight line-clamp-2">
+                          {tag.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            </div>
 
+            <div className="pt-3 border-t border-white/10 shrink-0">
               <button
                 type="button"
                 disabled={!userName.trim()}
                 onClick={() => saveProfile(userName, userTag)}
-                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:opacity-40 text-white font-black py-3 rounded-2xl shadow-lg transition-all active:scale-95"
+                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:opacity-40 text-white font-black py-2.5 sm:py-3 rounded-2xl shadow-lg transition-all active:scale-95 text-xs sm:text-sm"
               >
-                Entrar no Show!
+                Entrar no Show! 🎤
               </button>
             </div>
           </div>
