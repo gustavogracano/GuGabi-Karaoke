@@ -1098,14 +1098,10 @@ export default function MobileControlPage() {
     }
   };
 
-  // 9. Enviar Fofoca (com cooldown de 20s para não lotar o letreiro)
+  // 9. Enviar Fofoca (sem segurar o usuário - fica rodando na TV a cada 5s)
   const handleSendGossip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gossipText.trim() || isSendingGossip) return;
-
-    if (gossipCooldown > 0 && !isAdminAuthenticated) {
-      return;
-    }
 
     setIsSendingGossip(true);
     try {
@@ -1126,10 +1122,7 @@ export default function MobileControlPage() {
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         try { navigator.vibrate(50); } catch {}
       }
-      if (!isAdminAuthenticated) {
-        setGossipCooldown(20);
-      }
-      setTimeout(() => setGossipSuccess(false), 3000);
+      setTimeout(() => setGossipSuccess(false), 2500);
     } catch (err) {
       console.error("Erro ao enviar fofoca:", err);
     } finally {
@@ -1994,26 +1987,17 @@ export default function MobileControlPage() {
                   <input
                     type="text"
                     maxLength={60}
-                    disabled={gossipCooldown > 0 && !isAdminAuthenticated}
                     value={gossipText}
                     onChange={(e) => setGossipText(e.target.value)}
-                    placeholder={
-                      gossipCooldown > 0 && !isAdminAuthenticated
-                        ? `Aguarde ${gossipCooldown}s para a próxima fofoca...`
-                        : "Escreva uma fofoca ou exposed da galera..."
-                    }
-                    className="w-full bg-slate-900/60 border border-white/15 focus:border-yellow-400 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-slate-500 outline-none transition-all backdrop-blur-md disabled:opacity-50"
+                    placeholder="Escreva uma fofoca ou exposed da galera..."
+                    className="w-full bg-slate-900/60 border border-white/15 focus:border-yellow-400 rounded-2xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-slate-500 outline-none transition-all backdrop-blur-md"
                   />
                   <button
                     type="submit"
-                    disabled={isSendingGossip || !gossipText.trim() || (gossipCooldown > 0 && !isAdminAuthenticated)}
+                    disabled={isSendingGossip || !gossipText.trim()}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-black rounded-xl transition-all active:scale-90"
                   >
-                    {gossipCooldown > 0 && !isAdminAuthenticated ? (
-                      <span className="text-[10px] font-mono font-black">{gossipCooldown}s</span>
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
+                    <Send className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
@@ -2033,17 +2017,12 @@ export default function MobileControlPage() {
                         <>🕵️ Fofoca Anônima</>
                       )}
                     </button>
-                    <span className="hidden sm:inline text-slate-500">• 5s na TV</span>
+                    <span className="text-slate-400">• Passa 5s na TV e avança</span>
                   </div>
-                  {gossipCooldown > 0 && !isAdminAuthenticated && (
-                    <span className="text-amber-400 font-bold flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Pausa de {gossipCooldown}s
-                    </span>
-                  )}
                 </div>
                 {gossipSuccess && (
                   <p className="text-xs text-yellow-300 flex items-center gap-1 font-semibold animate-pulse">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Enviada para a fila VIP da TV com sucesso!
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Fofoca enviada para o telão!
                   </p>
                 )}
               </form>
