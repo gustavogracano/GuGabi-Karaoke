@@ -1,5 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+};
 
 export const metadata: Metadata = {
   title: "GuGabi Karaoke - Karaokê Colaborativo",
@@ -11,7 +15,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "GuGabi Karaoke",
   },
-  themeColor: "#0f172a",
   icons: {
     apple: "/icon-192.png",
   },
