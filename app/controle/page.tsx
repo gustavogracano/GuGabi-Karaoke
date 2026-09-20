@@ -44,6 +44,7 @@ import {
   Plus,
   RotateCcw,
   ListMusic,
+  X,
 } from "lucide-react";
 import {
   DEFAULT_PARTY_PLAYLIST,
@@ -191,6 +192,11 @@ export default function MobileControlPage() {
     setIsEditingProfile(false);
   };
 
+  const userNameRef = useRef(userName);
+  useEffect(() => {
+    userNameRef.current = userName;
+  }, [userName]);
+
   // 2. Busca Fila e Fofocas no Supabase
   const fetchData = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
@@ -208,15 +214,35 @@ export default function MobileControlPage() {
         setCurrentSong(playing);
         setPendingQueue(pending);
 
+        const currentName = userNameRef.current.trim().toLowerCase();
+
+        // Se o erro atual for de limite da fila e agora o cantor tem menos de 2 músicas, limpa o erro na hora!
+        if (currentName) {
+          const userPending = pending.filter(
+            (s) =>
+              s.singer_name.toLowerCase() === currentName ||
+              s.singer_name.toLowerCase().includes(`& ${currentName}`) ||
+              s.singer_name.toLowerCase().includes(`${currentName} &`)
+          ).length;
+
+          if (userPending < 2) {
+            setSearchError((prev) => {
+              if (prev && prev.includes("músicas na fila de espera")) {
+                return null;
+              }
+              return prev;
+            });
+          }
+        }
+
         // Verifica dinamicamente se o usuário já gastou o Golden Ticket na sessão ativa atual
-        if (userName.trim()) {
-          const uName = userName.trim().toLowerCase();
+        if (currentName) {
           const hasUsedInActiveSession = queueData.some(
             (item) =>
               item.is_priority &&
-              (item.singer_name.toLowerCase() === uName ||
-                item.singer_name.toLowerCase().includes(`& ${uName}`) ||
-                item.singer_name.toLowerCase().includes(`${uName} &`))
+              (item.singer_name.toLowerCase() === currentName ||
+                item.singer_name.toLowerCase().includes(`& ${currentName}`) ||
+                item.singer_name.toLowerCase().includes(`${currentName} &`))
           );
           setGoldenTicketUsed(hasUsedInActiveSession);
         }
@@ -1587,9 +1613,17 @@ export default function MobileControlPage() {
             </form>
 
             {searchError && (
-              <div className="text-center py-4 text-xs text-red-400 bg-red-950/20 border border-red-900/40 rounded-xl p-3">
-                <AlertCircle className="w-5 h-5 mx-auto mb-1 text-red-400" />
-                <p>{searchError}</p>
+              <div className="relative text-center py-3.5 px-8 text-xs text-amber-300 bg-amber-950/40 border border-amber-500/40 rounded-2xl shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200">
+                <button
+                  type="button"
+                  onClick={() => setSearchError(null)}
+                  title="Fechar aviso"
+                  className="absolute right-2.5 top-2.5 p-1 text-slate-400 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+                <AlertCircle className="w-5 h-5 mx-auto mb-1 text-amber-400" />
+                <p className="font-semibold">{searchError}</p>
               </div>
             )}
 
