@@ -194,32 +194,32 @@ export default function TVPage() {
     }
   }, []);
 
-  // 3. Gerenciamento de eventos de Emojis (Flutuando com destaque nos flancos do palco da TV)
+  // 3. Gerenciamento de eventos de Emojis (Flutuando com destaque vibrante na TV)
   const handleAddEmoji = useCallback((emoji: string) => {
-    const burstCount = emoji === "🍅" ? 2 : 3;
+    const burstCount = emoji === "🍅" ? 3 : 4;
     const newParticles: EmojiParticle[] = [];
 
     for (let i = 0; i < burstCount; i++) {
-      // 75% sobem no flanco direito do player (58% a 72%), 25% no flanco esquerdo (12% a 22%)
-      // Nunca cobrem as legendas centrais (30% a 52%) e ficam 100% visíveis no palco
-      const isRightSide = Math.random() > 0.25;
+      // Distribuição pelos flancos (8% a 26% na esquerda, 56% a 88% na direita)
+      // Mantém a área central (28% a 54%) desobstruída para leitura de letras
+      const isRightSide = Math.random() > 0.35;
       const leftPercent = isRightSide
-        ? Math.floor(Math.random() * 14) + 58
-        : Math.floor(Math.random() * 10) + 12;
+        ? Math.floor(Math.random() * 32) + 56
+        : Math.floor(Math.random() * 18) + 8;
 
       newParticles.push({
         id: Math.random().toString(36).substring(2, 9) + `-${Date.now()}-${i}`,
         emoji,
         leftPercent,
-        scale: 1.0 + Math.random() * 0.35,
-        rotation: Math.floor(Math.random() * 24) - 12,
-        delay: i * 0.12,
+        scale: 1.1 + Math.random() * 0.45,
+        rotation: Math.floor(Math.random() * 36) - 18,
+        delay: i * 0.09,
       });
     }
 
-    setEmojis((prev) => [...prev.slice(-35), ...newParticles]);
+    setEmojis((prev) => [...prev.slice(-45), ...newParticles]);
 
-    // Regra do tomataço: 3+ tomates em menos de 4s
+    // Regra do tomataço: 3+ tomates em menos de 4.5s
     if (emoji === "🍅") {
       const now = Date.now();
       recentTomatoesRef.current = [

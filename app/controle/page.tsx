@@ -2066,10 +2066,10 @@ export default function MobileControlPage() {
           <button
             disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("❤️")}
-            className="flex-1 py-2.5 bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/45 active:scale-75 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-pink-500/20 to-pink-900/30 hover:from-pink-500/35 hover:to-pink-900/50 border-2 border-pink-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="text-2xl animate-pulse">❤️</span>
-            <span className="text-[10px] font-black text-pink-300">
+            <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">❤️</span>
+            <span className="text-[10px] font-black text-pink-300 mt-0.5 tracking-wide">
               {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Amei"}
             </span>
           </button>
@@ -2077,10 +2077,10 @@ export default function MobileControlPage() {
           <button
             disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("🔥")}
-            className="flex-1 py-2.5 bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/45 active:scale-75 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-amber-500/20 to-orange-900/30 hover:from-amber-500/35 hover:to-orange-900/50 border-2 border-amber-500/50 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="text-2xl animate-pulse">🔥</span>
-            <span className="text-[10px] font-black text-amber-300">
+            <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">🔥</span>
+            <span className="text-[10px] font-black text-amber-300 mt-0.5 tracking-wide">
               {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Fogo"}
             </span>
           </button>
@@ -2088,22 +2088,22 @@ export default function MobileControlPage() {
           <button
             disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("👏")}
-            className="flex-1 py-2.5 bg-blue-600/25 hover:bg-blue-600/40 border border-blue-500/45 active:scale-75 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-emerald-500/20 to-teal-900/30 hover:from-emerald-500/35 hover:to-teal-900/50 border-2 border-emerald-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="text-2xl">👏</span>
-            <span className="text-[10px] font-black text-blue-300">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Boa"}
+            <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">👏</span>
+            <span className="text-[10px] font-black text-emerald-300 mt-0.5 tracking-wide">
+              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Palmas"}
             </span>
           </button>
 
           <button
             disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("🍅")}
-            className="flex-1 py-2.5 bg-red-600/30 hover:bg-red-600/50 border border-red-500/60 active:scale-75 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-red-600/30 to-red-950/40 hover:from-red-600/45 hover:to-red-950/60 border-2 border-red-500/65 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-40 disabled:cursor-not-allowed group relative overflow-hidden"
           >
-            <span className="text-2xl">🍅</span>
-            <span className="text-[10px] font-black text-red-300">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Tomate"}
+            <span className="text-2xl sm:text-3xl select-none transition-transform group-hover:scale-125">🍅</span>
+            <span className="text-[10px] font-black text-red-300 mt-0.5 tracking-wide">
+              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Tomataço"}
             </span>
           </button>
         </div>
