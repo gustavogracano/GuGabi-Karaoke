@@ -1612,32 +1612,50 @@ export default function MobileControlPage() {
               ))}
             </div>
 
-            {/* Sugestões Rápidas */}
+            {/* Sugestões Rápidas de Karaokê em Destaque */}
             {searchResults.length === 0 && !isSearching && (
-              <div className="pt-2 text-center">
-                <p className="text-xs text-slate-400 mb-2">Grandes Clássicos de Karaokê:</p>
+              <div className="pt-2 text-center space-y-2.5">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+                  <span>Inspirações para cantar agora:</span>
+                </div>
                 <div className="flex flex-wrap gap-1.5 justify-center">
                   {[
-                    "Evidências",
-                    "Cheia de Manias",
-                    "Bohemian Rhapsody",
-                    "Tempo Perdido",
-                    "Não Quero Dinheiro",
-                    "Fogo e Paixão",
-                    "Anna Júlia",
-                    "Como Nossos Pais",
+                    { label: "Evidências", icon: "🤠" },
+                    { label: "Cheia de Manias", icon: "🥁" },
+                    { label: "Bohemian Rhapsody", icon: "👑" },
+                    { label: "Não Quero Dinheiro", icon: "🕺" },
+                    { label: "Tempo Perdido", icon: "🎸" },
+                    { label: "Fogo e Paixão", icon: "🌹" },
+                    { label: "Pipoco", icon: "🚜" },
+                    { label: "Macetando", icon: "🎉" },
+                    { label: "Anna Júlia", icon: "🎤" },
+                    { label: "Como Nossos Pais", icon: "✨" },
+                    { label: "Nem de Graça", icon: "🍻" },
+                    { label: "Lepo Lepo", icon: "💥" },
                   ].map((sug) => (
                     <button
-                      key={sug}
+                      key={sug.label}
                       onClick={() => {
-                        setSearchQuery(sug);
-                        fetch(`/api/search-youtube?q=${encodeURIComponent(sug)}`)
+                        setSearchQuery(sug.label);
+                        setIsSearching(true);
+                        setSearchError(null);
+                        const typeParam = searchType === "free" ? "&type=party" : "";
+                        fetch(`/api/search-youtube?q=${encodeURIComponent(sug.label)}${typeParam}`)
                           .then((r) => r.json())
-                          .then((d) => setSearchResults(d.items || []));
+                          .then((d) => {
+                            setSearchResults(d.items || []);
+                            setIsSearching(false);
+                          })
+                          .catch(() => {
+                            setIsSearching(false);
+                            setSearchError("Erro ao pesquisar música.");
+                          });
                       }}
-                      className="bg-white/10 hover:bg-pink-600/30 border border-white/10 px-2.5 py-1 rounded-full text-xs text-slate-300 hover:text-white transition-all active:scale-95"
+                      className="bg-white/5 hover:bg-pink-600/30 border border-white/10 hover:border-pink-500/40 px-3 py-1.5 rounded-full text-xs text-slate-200 hover:text-white transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                     >
-                      {sug}
+                      <span className="text-sm">{sug.icon}</span>
+                      <span className="font-semibold">{sug.label}</span>
                     </button>
                   ))}
                 </div>

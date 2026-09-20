@@ -35,13 +35,14 @@ const GOSSIP_DURATION_MS = 5000; // 5s por fofoca real
 const TIMER_TICK_MS = 50;
 
 const IDLE_PARTY_TIPS = [
-  "🤫 Fofoca VIP: Mande um babado anônimo pelo /controle e veja na TV!",
-  "🍅 Não curtiu a cantoria? Meta o dedo no tomate pelo celular!",
-  "👑 Dica: Músicas VIP furam a fila e passam na frente de todo mundo!",
-  "🎤 Afinação é detalhe, a emoção é obrigatória! Solte a voz!",
-  "💬 Recados, cantadas e memes ao vivo direto no telão!",
-  "🔥 O Maior Fã e o Jurado Carrasco da noite vão para o Relatório!",
-  "🎉 Peça sua música favorita pelo celular e prepare o gogó!",
+  "✨ Bem-vindos ao Karaokê do Gu & Gabi! 🎤🎉",
+  "📱 Aponte a câmera pro QR Code e escolha o que quer cantar!",
+  "🤫 Fofoca VIP: Mande um babado anônimo pelo celular e veja aqui na TV!",
+  "🍅 Se o cantor desafinar, a galera pode jogar tomate pelo celular!",
+  "👑 Golden Ticket: Seu passe VIP para furar a fila e cantar antes!",
+  "🎤 Afinação é detalhe, a emoção e o gogó são obrigatórios!",
+  "🔥 O Mais Votado e o Mais Cancelado da noite vão pro Relatório!",
+  "🥂 Hoje a noite é nossa! Hidratem a garganta e soltem a voz!",
 ];
 
 export function StageBottomBar({
