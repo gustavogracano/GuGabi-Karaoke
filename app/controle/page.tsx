@@ -72,6 +72,7 @@ export default function MobileControlPage() {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [addedSuccessMessage, setAddedSuccessMessage] = useState<string | null>(null);
+  const [searchType, setSearchType] = useState<"karaoke" | "free">("karaoke");
 
   // Fofocas
   const [gossipText, setGossipText] = useState<string>("");
@@ -209,6 +210,25 @@ export default function MobileControlPage() {
         setPendingQueue(pending);
       }
 
+      // Busca a Playlist do Modo Festa do Supabase
+      const { data: partyData } = await supabase
+        .from("karaoke_party_playlist")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (partyData && partyData.length > 0) {
+        setPartyPlaylist(
+          partyData.map((p) => ({
+            id: p.id,
+            title: p.title,
+            artist: p.artist,
+            videoId: p.video_id,
+            tag: p.tag || "Hit da Festa 🔥",
+          }))
+        );
+      }
+
       const { data: gossipData } = await supabase
         .from("karaoke_events")
         .select("*")
@@ -245,6 +265,11 @@ export default function MobileControlPage() {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "karaoke_party_playlist" },
+        () => fetchData()
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "karaoke_events" },
         (payload) => {
           if (payload.eventType === "DELETE") {
@@ -269,16 +294,6 @@ export default function MobileControlPage() {
                 newG,
                 ...prev.filter((g) => g.id !== newG.id).slice(0, 9),
               ]);
-            }
-          } else if (payload.new && (payload.new as KaraokeEvent).type === "sound") {
-            const ev = payload.new as KaraokeEvent;
-            if (ev.payload?.startsWith("admin_party_playlist_sync:")) {
-              try {
-                const parsed = JSON.parse(ev.payload.replace("admin_party_playlist_sync:", ""));
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                  setPartyPlaylist(parsed);
-                }
-              } catch {}
             }
           } else if (payload.new && (payload.new as KaraokeEvent).type === "skip_vote") {
             const ev = payload.new as KaraokeEvent;
@@ -353,7 +368,8 @@ export default function MobileControlPage() {
     setSearchError(null);
 
     try {
-      const res = await fetch(`/api/search-youtube?q=${encodeURIComponent(query)}`);
+      const typeParam = searchType === "free" ? "&type=party" : "";
+      const res = await fetch(`/api/search-youtube?q=${encodeURIComponent(query)}${typeParam}`);
       const data = await res.json();
 
       if (data.isBlocked) {
@@ -365,7 +381,11 @@ export default function MobileControlPage() {
       if (data.items) {
         setSearchResults(data.items);
         if (data.items.length === 0) {
-          setSearchError("Nenhum vídeo de karaokê compatível encontrado. Tente outro título.");
+          setSearchError(
+            searchType === "free"
+              ? "Nenhum vídeo compatível encontrado. Tente outro título."
+              : "Nenhum vídeo de karaokê compatível encontrado. Tente outro título ou mude para Modo Livre."
+          );
         }
       }
     } catch {
@@ -430,10 +450,14 @@ export default function MobileControlPage() {
         return;
       }
 
+      const singerName = duetPartner.trim()
+        ? `${userName.trim()} & ${duetPartner.trim()}`
+        : userName.trim();
+
       const { error } = await supabase.from("karaoke_queue").insert({
         video_id: item.videoId,
         title: item.title,
-        singer_name: userName.trim(),
+        singer_name: singerName,
         singer_tag: userTag,
         status: "pending",
         is_priority: isPriority,
@@ -449,10 +473,13 @@ export default function MobileControlPage() {
             localStorage.setItem("gukaraoke_ticket_used", "true");
           }
         }
-        setAddedSuccessMessage(`"${item.title.substring(0, 28)}..." adicionada!`);
+        const duetLabel = duetPartner.trim() ? ` (Dueto 🎤🎤)` : "";
+        setAddedSuccessMessage(`"${item.title.substring(0, 28)}..." adicionada${duetLabel}!`);
         setTimeout(() => setAddedSuccessMessage(null), 4000);
         setSearchQuery("");
         setSearchResults([]);
+        setDuetPartner("");
+        setShowDuetField(false);
         setActiveTab("fila");
       }
     } catch (err) {
@@ -651,31 +678,50 @@ export default function MobileControlPage() {
     }
   };
 
-  // Gerenciamento da Playlist do Modo Festa pelo Admin (sincronizado diretamente via Supabase)
+  // Gerenciamento da Playlist do Modo Festa pelo Admin (sincronizado diretamente via tabela karaoke_party_playlist)
   const syncPartyPlaylist = async (newList: PartySong[]) => {
     setPartyPlaylist(newList);
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from("karaoke_events").insert({
-          type: "sound",
-          payload: `admin_party_playlist_sync:${JSON.stringify(newList)}`,
-        });
+        // Atualiza a ordem no banco
+        for (let i = 0; i < newList.length; i++) {
+          const item = newList[i];
+          await supabase
+            .from("karaoke_party_playlist")
+            .update({ sort_order: i + 1 })
+            .eq("id", item.id);
+        }
       } catch (err) {
-        console.error("Erro ao sincronizar playlist do modo festa:", err);
+        console.error("Erro ao atualizar ordem do modo festa:", err);
       }
     }
   };
 
-  const handleMovePartyItem = (index: number, direction: "up" | "down") => {
+  const handleMovePartyItem = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= partyPlaylist.length) return;
     const updated = [...partyPlaylist];
     const [removed] = updated.splice(index, 1);
     updated.splice(targetIndex, 0, removed);
-    syncPartyPlaylist(updated);
+    setPartyPlaylist(updated);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase
+          .from("karaoke_party_playlist")
+          .update({ sort_order: targetIndex + 1 })
+          .eq("id", removed.id);
+        await supabase
+          .from("karaoke_party_playlist")
+          .update({ sort_order: index + 1 })
+          .eq("id", updated[index].id);
+      } catch (err) {
+        console.error("Erro ao mover clipe:", err);
+      }
+    }
   };
 
-  const handleDeletePartyItem = (index: number) => {
+  const handleDeletePartyItem = async (index: number) => {
     if (partyPlaylist.length <= 1) {
       alert("A playlist deve ter pelo menos 1 clipe!");
       return;
@@ -683,15 +729,42 @@ export default function MobileControlPage() {
     const songToDelete = partyPlaylist[index];
     if (!confirm(`Remover "${songToDelete.title}" da playlist do Modo Festa?`)) return;
     const updated = partyPlaylist.filter((_, i) => i !== index);
-    syncPartyPlaylist(updated);
+    setPartyPlaylist(updated);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase
+          .from("karaoke_party_playlist")
+          .delete()
+          .eq("id", songToDelete.id);
+      } catch (err) {
+        console.error("Erro ao remover clipe da playlist:", err);
+      }
+    }
   };
 
-  const handleResetPartyPlaylist = () => {
-    if (confirm("Restaurar a playlist padrão com os maiores sucessos atuais?")) {
-      syncPartyPlaylist(DEFAULT_PARTY_PLAYLIST);
-      setAddedSuccessMessage("Playlist de sucessos restaurada!");
-      setTimeout(() => setAddedSuccessMessage(null), 2500);
+  const handleResetPartyPlaylist = async () => {
+    if (!confirm("Restaurar a playlist padrão com os maiores sucessos atuais?")) return;
+    setPartyPlaylist(DEFAULT_PARTY_PLAYLIST);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("karaoke_party_playlist").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        const rows = DEFAULT_PARTY_PLAYLIST.map((s, idx) => ({
+          video_id: s.videoId,
+          title: s.title,
+          artist: s.artist,
+          tag: s.tag,
+          sort_order: idx + 1,
+        }));
+        await supabase.from("karaoke_party_playlist").insert(rows);
+      } catch (err) {
+        console.error("Erro ao restaurar playlist padrão:", err);
+      }
     }
+
+    setAddedSuccessMessage("Playlist de sucessos restaurada!");
+    setTimeout(() => setAddedSuccessMessage(null), 2500);
   };
 
   const handleAddPartyItem = async (e: React.FormEvent) => {
@@ -721,22 +794,44 @@ export default function MobileControlPage() {
       // safe fallback
     }
 
+    let insertedId = `party-custom-${Date.now()}`;
+    if (isSupabaseConfigured()) {
+      try {
+        const nextOrder = partyPlaylist.length + 1;
+        const { data: insData } = await supabase
+          .from("karaoke_party_playlist")
+          .insert({
+            video_id: videoId,
+            title: newPartyTitle.trim(),
+            artist: newPartyArtist.trim() || "Hit Atual",
+            tag: newPartyTag.trim() || "Hit da Festa 🔥",
+            sort_order: nextOrder,
+          })
+          .select("id")
+          .single();
+        if (insData?.id) {
+          insertedId = insData.id;
+        }
+      } catch (err) {
+        console.error("Erro ao salvar clipe no banco:", err);
+      }
+    }
+
     const newSong: PartySong = {
-      id: `party-custom-${Date.now()}`,
+      id: insertedId,
       title: newPartyTitle.trim(),
       artist: newPartyArtist.trim() || "Hit Atual",
       videoId: videoId,
       tag: newPartyTag.trim() || "Hit da Festa 🔥",
     };
 
-    const updated = [...partyPlaylist, newSong];
-    syncPartyPlaylist(updated);
+    setPartyPlaylist((prev) => [...prev, newSong]);
     setNewPartyTitle("");
     setNewPartyArtist("");
     setNewPartyVideoUrl("");
     setNewPartyTag("Hit da Festa 🔥");
     setShowAddPartyModal(false);
-    setAddedSuccessMessage(`"${newSong.title}" adicionada ao Modo Festa!`);
+    setAddedSuccessMessage(`"${newSong.title}" adicionada ao fim da fila da festa!`);
     setTimeout(() => setAddedSuccessMessage(null), 3000);
   };
 
@@ -768,7 +863,7 @@ export default function MobileControlPage() {
     }
   };
 
-  const handleSelectPartySearchResult = (result: YouTubeSearchResult) => {
+  const handleSelectPartySearchResult = async (result: YouTubeSearchResult) => {
     // Normaliza nome do artista e título
     const parts = result.title.split(/ - | – | • /);
     let artist = result.channelTitle || "Hit da Pista";
@@ -789,20 +884,45 @@ export default function MobileControlPage() {
       .replace(/\[vídeo.*?\]/gi, "")
       .trim();
 
+    let insertedId = `party-${result.videoId}-${Date.now()}`;
+    const cleanTitle = title || result.title;
+    const cleanArtist = artist || "Hit da Festa";
+
+    if (isSupabaseConfigured()) {
+      try {
+        const nextOrder = partyPlaylist.length + 1;
+        const { data: insData } = await supabase
+          .from("karaoke_party_playlist")
+          .insert({
+            video_id: result.videoId,
+            title: cleanTitle,
+            artist: cleanArtist,
+            tag: "Hit da Festa 🔥",
+            sort_order: nextOrder,
+          })
+          .select("id")
+          .single();
+        if (insData?.id) {
+          insertedId = insData.id;
+        }
+      } catch (err) {
+        console.error("Erro ao salvar clipe no Supabase:", err);
+      }
+    }
+
     const newSong: PartySong = {
-      id: `party-${result.videoId}-${Date.now()}`,
-      title: title || result.title,
-      artist: artist || "Hit da Festa",
+      id: insertedId,
+      title: cleanTitle,
+      artist: cleanArtist,
       videoId: result.videoId,
       tag: "Hit da Festa 🔥",
     };
 
-    const updated = [...partyPlaylist, newSong];
-    syncPartyPlaylist(updated);
+    setPartyPlaylist((prev) => [...prev, newSong]);
     setShowAddPartyModal(false);
     setPartySearchQuery("");
     setPartySearchResults([]);
-    setAddedSuccessMessage(`"${newSong.title}" adicionada ao Modo Festa!`);
+    setAddedSuccessMessage(`"${newSong.title}" adicionada ao fim da fila da festa!`);
     setTimeout(() => setAddedSuccessMessage(null), 3000);
   };
 
@@ -1316,6 +1436,74 @@ export default function MobileControlPage() {
                   )}
                 </button>
               </div>
+
+              {/* Toggle Modo Livre / Karaokê */}
+              <div className="flex items-center justify-between bg-purple-500/10 border border-purple-500/30 p-2.5 rounded-xl backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎵</span>
+                  <div>
+                    <p className="text-xs font-bold text-purple-300">
+                      {searchType === "karaoke" ? "Modo Karaokê 🎤" : "Modo Livre 🎶"}
+                    </p>
+                    <p className="text-[10px] text-purple-400/80">
+                      {searchType === "karaoke"
+                        ? "Busca versões karaokê com letra"
+                        : "Busca qualquer versão — clipe, ao vivo, cover..."}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchType(t => t === "karaoke" ? "free" : "karaoke")}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black border transition-all ${
+                    searchType === "karaoke"
+                      ? "bg-purple-600/40 border-purple-500/50 text-purple-200"
+                      : "bg-emerald-600/30 border-emerald-500/40 text-emerald-300"
+                  }`}
+                >
+                  {searchType === "karaoke" ? "Karaokê" : "Livre"}
+                </button>
+              </div>
+
+              {/* Modo Dueto */}
+              <div className="flex items-center justify-between bg-pink-500/10 border border-pink-500/30 p-2.5 rounded-xl backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎤🎤</span>
+                  <div>
+                    <p className="text-xs font-bold text-pink-300">Modo Dueto</p>
+                    <p className="text-[10px] text-pink-400/80">
+                      Chame alguém para cantar junto!
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={showDuetField}
+                  onChange={(e) => {
+                    setShowDuetField(e.target.checked);
+                    if (!e.target.checked) setDuetPartner("");
+                  }}
+                  className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
+                />
+              </div>
+
+              {showDuetField && (
+                <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                  <input
+                    type="text"
+                    value={duetPartner}
+                    onChange={(e) => setDuetPartner(e.target.value)}
+                    placeholder="Nome do(a) parceiro(a) de dueto..."
+                    maxLength={30}
+                    className="w-full bg-pink-950/30 border border-pink-500/40 focus:border-pink-400 rounded-xl py-2.5 pl-4 pr-10 text-sm text-white placeholder:text-slate-500 outline-none transition-all"
+                  />
+                  {duetPartner.trim() && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-pink-300">
+                      🎤🎤
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Opção Golden Ticket */}
               <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl backdrop-blur-md">

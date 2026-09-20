@@ -22,29 +22,34 @@ export default function TVPage() {
   const [currentSong, setCurrentSong] = useState<KaraokeQueueItem | null>(null);
   const [pendingSongs, setPendingSongs] = useState<KaraokeQueueItem[]>([]);
 
-  // Modo Festa Contínua: Playlist dinâmica sincronizada em tempo real (Sem inchar o localStorage)
+  // Modo Festa Contínua: Playlist dinâmica sincronizada em tempo real via tabela Supabase
   const [isPartyModeEnabled, setIsPartyModeEnabled] = useState<boolean>(true);
   const [partyIndex, setPartyIndex] = useState<number>(0);
   const [partyPlaylist, setPartyPlaylist] = useState<PartySong[]>(DEFAULT_PARTY_PLAYLIST);
+  const [activePartyTrack, setActivePartyTrack] = useState<PartySong | null>(null);
 
-  // Limpa lixo legado do localStorage que pesava e travava o Safari/SmartTV
+  // Mantém a playlistRef atualizada para buscas estáveis
+  const partyPlaylistRef = useRef<PartySong[]>(partyPlaylist);
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.removeItem("gukaraoke_party_playlist");
-        localStorage.removeItem("gukaraoke_party_playlist_version");
-        localStorage.removeItem("gukaraoke_party_playlist_index");
-      } catch {}
+    partyPlaylistRef.current = partyPlaylist;
+    // Se ainda não tem nenhuma tocando e a lista carregou, inicia na primeira
+    if (!activePartyTrack && partyPlaylist.length > 0) {
+      setActivePartyTrack(partyPlaylist[0]);
     }
-  }, []);
+  }, [partyPlaylist, activePartyTrack]);
 
-  // Alterna para a próxima música da festa
+  // Alterna para a próxima música da festa (somente quando a música atual terminar ou for pulada)
   const advancePartySong = useCallback(() => {
-    setPartyIndex((prev) => {
-      const len = partyPlaylist.length > 0 ? partyPlaylist.length : 1;
-      return (prev + 1) % len;
+    const list = partyPlaylistRef.current;
+    if (list.length === 0) return;
+
+    setActivePartyTrack((currentTrack) => {
+      if (!currentTrack) return list[0];
+      const currentIndex = list.findIndex((s) => s.videoId === currentTrack.videoId);
+      const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % list.length : 0;
+      return list[nextIndex] || list[0];
     });
-  }, [partyPlaylist.length]);
+  }, []);
 
   // Liga/desliga o modo festa contínua
   const togglePartyMode = useCallback(() => {
@@ -158,36 +163,31 @@ export default function TVPage() {
     }
   }, []);
 
-  // 2b. Carrega playlist do Modo Festa atualizada pelo Admin no Supabase
+  // 2b. Carrega playlist do Modo Festa diretamente da tabela karaoke_party_playlist
   const fetchPartyPlaylist = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
     try {
-      const { data } = await supabase
-        .from("karaoke_events")
-        .select("payload")
-        .eq("type", "sound")
-        .like("payload", "admin_party_playlist_sync:%")
-        .order("created_at", { ascending: false })
-        .limit(1);
+      const { data, error } = await supabase
+        .from("karaoke_party_playlist")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
 
-      if (data && data.length > 0 && data[0].payload) {
-        const jsonStr = data[0].payload.replace("admin_party_playlist_sync:", "");
-        try {
-          const list = JSON.parse(jsonStr);
-          if (Array.isArray(list) && list.length > 0) {
-            const DEPRECATED_IDS = [
-              "LdydpFwQ11Y", "Z_xh-_tEGTw", "_zKnEm9xPWw", "aHBW_Nd_z8k", "ZKqxlPfPZrE",
-              "GdMhUHNquHM", "BTXQWjGQ3PU", "IKmEssj5uAU",
-              "kYJ6JjV3TAs", "F399-5y2V-g", "R4v_l5bL7nE", "52F-9J-w2tU", "g3H4rG61B5U", "A8Jd8Q656tE"
-            ];
-            const cleanList = list.filter((s: PartySong) => !DEPRECATED_IDS.includes(s.videoId));
-            if (cleanList.length > 0) {
-              setPartyPlaylist(cleanList);
-            } else {
-              setPartyPlaylist(DEFAULT_PARTY_PLAYLIST);
-            }
-          }
-        } catch {}
+      if (error) {
+        console.error("Erro ao buscar playlist da tabela karaoke_party_playlist:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPartyPlaylist(
+          data.map((item) => ({
+            id: item.id,
+            title: item.title,
+            artist: item.artist,
+            videoId: item.video_id,
+            tag: item.tag || "Hit da Festa 🔥",
+          }))
+        );
       }
     } catch (e) {
       console.error("Erro ao buscar playlist do Modo Festa:", e);
@@ -239,10 +239,14 @@ export default function TVPage() {
 
   // Se não houver música cantada por usuário na fila, o Modo Festa assume o palco!
   const isPartyActive = !currentSong && pendingSongs.length === 0 && isPartyModeEnabled;
-  const currentPartyTrack = partyPlaylist[partyIndex % (partyPlaylist.length || 1)] || partyPlaylist[0] || DEFAULT_PARTY_PLAYLIST[0];
-  const nextPartyTrack = partyPlaylist[(partyIndex + 1) % (partyPlaylist.length || 1)] || partyPlaylist[0] || DEFAULT_PARTY_PLAYLIST[0];
+  const currentPartyTrack = activePartyTrack || partyPlaylist[0] || DEFAULT_PARTY_PLAYLIST[0];
 
-  const activeSong: KaraokeQueueItem | null = currentSong || (isPartyActive ? {
+  // Identifica a próxima música da festa (a que está logo depois da atual na lista)
+  const currentIdxInPlaylist = partyPlaylist.findIndex((p) => p.videoId === currentPartyTrack.videoId);
+  const nextPartyIndex = currentIdxInPlaylist !== -1 ? (currentIdxInPlaylist + 1) % (partyPlaylist.length || 1) : 1 % (partyPlaylist.length || 1);
+  const nextPartyTrack = partyPlaylist[nextPartyIndex] || partyPlaylist[0] || DEFAULT_PARTY_PLAYLIST[0];
+
+  const activeSong: KaraokeQueueItem | null = currentSong || (isPartyActive && currentPartyTrack ? {
     id: `party_${currentPartyTrack.id}`,
     singer_name: "Palco Livre 🎉",
     singer_tag: currentPartyTrack.tag || "Clipe Oficial 🎬",
@@ -329,6 +333,13 @@ export default function TVPage() {
         { event: "*", schema: "public", table: "karaoke_queue" },
         () => {
           fetchQueue();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "karaoke_party_playlist" },
+        () => {
+          fetchPartyPlaylist();
         }
       )
       .on(

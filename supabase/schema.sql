@@ -92,6 +92,17 @@ CREATE TABLE IF NOT EXISTS public.karaoke_gossips (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 5b. Tabela Dedicada para a Playlist do Modo Festa (Clipes Oficiais com voz)
+CREATE TABLE IF NOT EXISTS public.karaoke_party_playlist (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    video_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    artist TEXT NOT NULL DEFAULT 'Hit da Festa',
+    tag TEXT DEFAULT 'Clipe Oficial 🎬',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- 6. Índices Otimizados de Alta Performance
 CREATE INDEX IF NOT EXISTS idx_karaoke_queue_status_priority 
 ON public.karaoke_queue (status, is_priority DESC, created_at ASC);

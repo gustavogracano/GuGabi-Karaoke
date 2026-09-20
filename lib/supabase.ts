@@ -66,6 +66,16 @@ export interface SingerStats {
   overall_approval_percent: number;
 }
 
+export interface KaraokePartySong {
+  id: string;
+  video_id: string;
+  title: string;
+  artist: string;
+  tag?: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
