@@ -12,7 +12,20 @@ export type SoundEffect =
   | "pare"
   | "queisso"
   | "brasil"
-  | "coracao";
+  | "coracao"
+  | "cavalo"
+  | "demais"
+  | "ui"
+  | "nao_e_o_pai"
+  | "elegosta"
+  | "chega"
+  | "tetra"
+  | "beijo"
+  | "oloco"
+  | "plantao"
+  | "badumtss"
+  | "grilo"
+  | "sirene";
 
 const ALL_SOUNDS: SoundEffect[] = [
   "errou",
@@ -29,6 +42,19 @@ const ALL_SOUNDS: SoundEffect[] = [
   "queisso",
   "brasil",
   "coracao",
+  "cavalo",
+  "demais",
+  "ui",
+  "nao_e_o_pai",
+  "elegosta",
+  "chega",
+  "tetra",
+  "beijo",
+  "oloco",
+  "plantao",
+  "badumtss",
+  "grilo",
+  "sirene",
 ];
 
 const SOUND_NORMALIZATION: Record<SoundEffect, number> = {
@@ -36,12 +62,25 @@ const SOUND_NORMALIZATION: Record<SoundEffect, number> = {
   buzina: 0.58,
   gong: 0.60,
   pare: 0.72,
+  sirene: 0.65,
+  plantao: 0.75,
 
   // Sons médios/balanceados
   sino: 0.85,
   brasil: 0.85,
   coracao: 0.88,
   danca_gatinho: 0.90,
+  cavalo: 0.90,
+  demais: 0.90,
+  ui: 0.95,
+  nao_e_o_pai: 0.90,
+  elegosta: 0.90,
+  chega: 0.90,
+  tetra: 0.90,
+  beijo: 0.90,
+  oloco: 0.90,
+  badumtss: 0.90,
+  grilo: 0.90,
 
   // Sons que precisam de ganho máximo para clareza
   errou: 0.95,

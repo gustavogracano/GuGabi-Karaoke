@@ -506,30 +506,12 @@ export default function MobileControlPage() {
     }
   };
 
-  // 6. Reações com Feedback Visual, Vibração e Anti-Spam
+  // 6. Reações Rápidas da Plateia (Liberado sem bloqueio - permite tomataço e chuva de reações)
   const handleReaction = async (emoji: "❤️" | "🔥" | "👏" | "🍅") => {
-    if (emojiCooldown > 0 && !isAdminAuthenticated) {
-      return;
-    }
-
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate(40);
       } catch {}
-    }
-
-    // Anti-flood de emojis: até 4 cliques rápidos por ciclo de 3.5s
-    if (!isAdminAuthenticated) {
-      emojiClickCountRef.current += 1;
-      if (emojiClickCountRef.current >= 4) {
-        setEmojiCooldown(3); // Pausa de 3 segundos
-        emojiClickCountRef.current = 0;
-      } else {
-        if (emojiTimerRef.current) clearTimeout(emojiTimerRef.current);
-        emojiTimerRef.current = setTimeout(() => {
-          emojiClickCountRef.current = 0;
-        }, 3500);
-      }
     }
 
     if (!isSupabaseConfigured()) return;
@@ -1949,7 +1931,19 @@ export default function MobileControlPage() {
                 {[
                   { id: "errou", emoji: "❌", label: "ERROU!", color: "border-red-500/50 bg-red-600/25 text-red-300 hover:border-red-400" },
                   { id: "uepa", emoji: "🗣️", label: "UÊPA!", color: "border-purple-500/50 bg-purple-600/25 text-purple-300 hover:border-purple-400" },
-                  { id: "danca_gatinho", emoji: "🕺", label: "GATINHO", color: "border-pink-500/50 bg-pink-600/25 text-pink-300 hover:border-pink-400" },
+                  { id: "cavalo", emoji: "🐴", label: "CAVALO", color: "border-amber-600/50 bg-amber-700/25 text-amber-200 hover:border-amber-400" },
+                  { id: "elegosta", emoji: "😏", label: "ELE GOSTA", color: "border-purple-600/50 bg-purple-700/25 text-purple-300 hover:border-purple-400" },
+                  { id: "ui", emoji: "💋", label: "UUUI!", color: "border-rose-500/50 bg-rose-600/25 text-rose-300 hover:border-rose-400" },
+                  { id: "demais", emoji: "🕺", label: "DEMAIS!", color: "border-fuchsia-500/50 bg-fuchsia-600/25 text-fuchsia-300 hover:border-fuchsia-400" },
+                  { id: "nao_e_o_pai", emoji: "🍼", label: "NÃO É PAI", color: "border-blue-500/50 bg-blue-600/25 text-blue-300 hover:border-blue-400" },
+                  { id: "oloco", emoji: "🎙️", label: "Ô LOCO!", color: "border-cyan-500/50 bg-cyan-600/25 text-cyan-300 hover:border-cyan-400" },
+                  { id: "plantao", emoji: "🚨", label: "PLANTÃO", color: "border-red-600/50 bg-red-700/25 text-red-300 hover:border-red-400" },
+                  { id: "tetra", emoji: "🏆", label: "É TETRA!", color: "border-green-500/50 bg-green-600/25 text-green-300 hover:border-green-400" },
+                  { id: "beijo", emoji: "😘", label: "BEIJO", color: "border-pink-500/50 bg-pink-600/25 text-pink-300 hover:border-pink-400" },
+                  { id: "badumtss", emoji: "🥁", label: "BA DUM TSS", color: "border-slate-500/50 bg-slate-600/25 text-slate-200 hover:border-slate-300" },
+                  { id: "grilo", emoji: "🦗", label: "GRILO", color: "border-stone-500/50 bg-stone-600/25 text-stone-300 hover:border-stone-400" },
+                  { id: "sirene", emoji: "🚔", label: "SIRENE", color: "border-blue-600/50 bg-blue-700/25 text-blue-200 hover:border-blue-400" },
+                  { id: "danca_gatinho", emoji: "🐱", label: "GATINHO", color: "border-pink-500/50 bg-pink-600/25 text-pink-300 hover:border-pink-400" },
                   { id: "rapaz", emoji: "🐭", label: "RAPAAAZ!", color: "border-amber-500/50 bg-amber-600/25 text-amber-300 hover:border-amber-400" },
                   { id: "pare", emoji: "🛑", label: "PARE!", color: "border-rose-600/50 bg-rose-700/25 text-rose-300 hover:border-rose-400" },
                   { id: "queisso", emoji: "😅", label: "CALMA!", color: "border-cyan-500/50 bg-cyan-600/25 text-cyan-300 hover:border-cyan-400" },
@@ -2037,7 +2031,7 @@ export default function MobileControlPage() {
                         <>🕵️ Fofoca Anônima</>
                       )}
                     </button>
-                    <span className="text-slate-400">• Passa 5s na TV e avança</span>
+                    <span className="text-slate-400">• 5s em destaque no telão</span>
                   </div>
                 </div>
                 {gossipSuccess && (
@@ -2101,51 +2095,39 @@ export default function MobileControlPage() {
         )}
       </main>
 
-      {/* BARRA FIXA DE REAÇÕES DA PLATEIA COM FEEDBACK VISUAL BOUNCE & ANTI-SPAM */}
+      {/* BARRA FIXA DE REAÇÕES DA PLATEIA COM FEEDBACK VISUAL BOUNCE & LIVRE */}
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/85 backdrop-blur-2xl border-t border-white/15 p-3 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.85)]">
         <div className="flex items-center justify-between gap-2">
           <button
-            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("❤️")}
-            className="flex-1 py-2 bg-gradient-to-b from-pink-500/20 to-pink-900/30 hover:from-pink-500/35 hover:to-pink-900/50 border-2 border-pink-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-pink-500/20 to-pink-900/30 hover:from-pink-500/35 hover:to-pink-900/50 border-2 border-pink-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)]"
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">❤️</span>
-            <span className="text-[10px] font-black text-pink-300 mt-0.5 tracking-wide">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Amei"}
-            </span>
+            <span className="text-[10px] font-black text-pink-300 mt-0.5 tracking-wide">Amei</span>
           </button>
 
           <button
-            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("🔥")}
-            className="flex-1 py-2 bg-gradient-to-b from-amber-500/20 to-orange-900/30 hover:from-amber-500/35 hover:to-orange-900/50 border-2 border-amber-500/50 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-amber-500/20 to-orange-900/30 hover:from-amber-500/35 hover:to-orange-900/50 border-2 border-amber-500/50 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">🔥</span>
-            <span className="text-[10px] font-black text-amber-300 mt-0.5 tracking-wide">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Fogo"}
-            </span>
+            <span className="text-[10px] font-black text-amber-300 mt-0.5 tracking-wide">Fogo</span>
           </button>
 
           <button
-            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("👏")}
-            className="flex-1 py-2 bg-gradient-to-b from-emerald-500/20 to-teal-900/30 hover:from-emerald-500/35 hover:to-teal-900/50 border-2 border-emerald-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-2 bg-gradient-to-b from-emerald-500/20 to-teal-900/30 hover:from-emerald-500/35 hover:to-teal-900/50 border-2 border-emerald-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">👏</span>
-            <span className="text-[10px] font-black text-emerald-300 mt-0.5 tracking-wide">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Palmas"}
-            </span>
+            <span className="text-[10px] font-black text-emerald-300 mt-0.5 tracking-wide">Palmas</span>
           </button>
 
           <button
-            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
             onClick={() => handleReaction("🍅")}
-            className="flex-1 py-2 bg-gradient-to-b from-red-600/30 to-red-950/40 hover:from-red-600/45 hover:to-red-950/60 border-2 border-red-500/65 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-40 disabled:cursor-not-allowed group relative overflow-hidden"
+            className="flex-1 py-2 bg-gradient-to-b from-red-600/30 to-red-950/40 hover:from-red-600/45 hover:to-red-950/60 border-2 border-red-500/65 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] group relative overflow-hidden"
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform group-hover:scale-125">🍅</span>
-            <span className="text-[10px] font-black text-red-300 mt-0.5 tracking-wide">
-              {emojiCooldown > 0 && !isAdminAuthenticated ? `${emojiCooldown}s` : "Tomataço"}
-            </span>
+            <span className="text-[10px] font-black text-red-300 mt-0.5 tracking-wide">Tomataço</span>
           </button>
         </div>
       </footer>
