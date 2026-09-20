@@ -79,6 +79,7 @@ export default function MobileControlPage() {
   const [gossipText, setGossipText] = useState<string>("");
   const [isSendingGossip, setIsSendingGossip] = useState<boolean>(false);
   const [gossipSuccess, setGossipSuccess] = useState<boolean>(false);
+  const [includeNameInGossip, setIncludeNameInGossip] = useState<boolean>(true);
 
   // Votação para Pular Música
   const [hasVotedSkip, setHasVotedSkip] = useState<string | null>(null); // song_id que votou pular
@@ -1109,9 +1110,14 @@ export default function MobileControlPage() {
     setIsSendingGossip(true);
     try {
       if (isSupabaseConfigured()) {
+        const payloadText =
+          includeNameInGossip && userName.trim()
+            ? `[${userName.trim()}]: ${gossipText.trim()}`
+            : gossipText.trim();
+
         await supabase.from("karaoke_events").insert({
           type: "fofoca",
-          payload: gossipText.trim(),
+          payload: payloadText,
         });
       }
       setGossipText("");
@@ -2011,7 +2017,24 @@ export default function MobileControlPage() {
                   </button>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span>⏱️ 5s de destaque na TV por fofoca</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIncludeNameInGossip(!includeNameInGossip)}
+                      className={`text-[11px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 font-bold ${
+                        includeNameInGossip && userName.trim()
+                          ? "bg-pink-500/20 text-pink-300 border-pink-500/40"
+                          : "bg-slate-800 text-slate-400 border-white/10"
+                      }`}
+                    >
+                      {includeNameInGossip && userName.trim() ? (
+                        <>✍️ Por: <span className="text-white">{userName.trim()}</span></>
+                      ) : (
+                        <>🕵️ Fofoca Anônima</>
+                      )}
+                    </button>
+                    <span className="hidden sm:inline text-slate-500">• 5s na TV</span>
+                  </div>
                   {gossipCooldown > 0 && !isAdminAuthenticated && (
                     <span className="text-amber-400 font-bold flex items-center gap-1">
                       <Clock className="w-3 h-3" /> Pausa de {gossipCooldown}s

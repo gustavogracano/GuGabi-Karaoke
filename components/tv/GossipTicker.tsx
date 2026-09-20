@@ -241,19 +241,33 @@ export function GossipTicker({
                   isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
                 }`}
               >
-                <p
-                  className={`font-black text-white tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] ${
-                    currentGossip.text.length > 55
-                      ? "text-xs md:text-sm line-clamp-1"
-                      : "text-xs sm:text-sm md:text-base lg:text-lg line-clamp-1"
-                  }`}
-                >
-                  <span className="text-pink-400 mr-1 font-serif text-base md:text-lg select-none">“</span>
-                  <span className="bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
-                    {currentGossip.text}
-                  </span>
-                  <span className="text-pink-400 ml-1 font-serif text-base md:text-lg select-none">”</span>
-                </p>
+                {(() => {
+                  // Suporta opcionalmente fofocas que venham com autor no formato "[Nome]: Mensagem" ou texto puro
+                  const matchAuthor = currentGossip.text.match(/^\[(.*?)\]:\s*(.*)$/);
+                  const author = matchAuthor ? matchAuthor[1] : null;
+                  const displayMessage = matchAuthor ? matchAuthor[2] : currentGossip.text;
+
+                  return (
+                    <p
+                      className={`font-black text-white tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] ${
+                        displayMessage.length > 55
+                          ? "text-xs md:text-sm line-clamp-1"
+                          : "text-xs sm:text-sm md:text-base lg:text-lg line-clamp-1"
+                      }`}
+                    >
+                      {author && (
+                        <span className="mr-2 inline-flex items-center px-2 py-0.5 rounded-md text-[11px] md:text-xs font-black bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                          {author}
+                        </span>
+                      )}
+                      <span className="text-pink-400 mr-1 font-serif text-base md:text-lg select-none">“</span>
+                      <span className="bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
+                        {displayMessage}
+                      </span>
+                      <span className="text-pink-400 ml-1 font-serif text-base md:text-lg select-none">”</span>
+                    </p>
+                  );
+                })()}
               </div>
             </div>
 
