@@ -31,6 +31,7 @@ export interface StagePlayerRef {
   setVolume: (val: number) => void;
   getVolume: () => number;
   toggleMute: () => void;
+  duckMusic: (duckDurationMs?: number, targetPercent?: number) => void;
 }
 
 interface StagePlayerProps {
@@ -102,9 +103,21 @@ export const StagePlayer = forwardRef<StagePlayerRef, StagePlayerProps>(function
     return () => observer.disconnect();
   }, []);
 
+  // Gerenciamento de ducking (redução temporária da música quando toca efeito sonoro)
+  const isDuckingRef = useRef(false);
+  const duckRestoreTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const userVolumeRef = useRef(volume);
+
+  useEffect(() => {
+    if (!isDuckingRef.current) {
+      userVolumeRef.current = volume;
+    }
+  }, [volume]);
+
   // Ajuste de volume persistido e sincronizado com o player do YouTube
   const changeVolume = (newVol: number) => {
     const clamped = Math.max(0, Math.min(100, Math.round(newVol)));
+    userVolumeRef.current = clamped;
     setVolumeState(clamped);
     if (playerRef.current && typeof playerRef.current.setVolume === "function") {
       try {
@@ -121,7 +134,30 @@ export const StagePlayer = forwardRef<StagePlayerRef, StagePlayerProps>(function
     }
   };
 
-  // Imperative handle para controle remoto do host (via celular)
+  // Função para dar "duck" (abaixar a música para o efeito sonoro aparecer nítido)
+  const duckMusic = (duckDurationMs = 2200, targetPercent = 0.28) => {
+    if (isMuted || userVolumeRef.current <= 0 || !playerRef.current) return;
+    try {
+      if (duckRestoreTimerRef.current) {
+        clearTimeout(duckRestoreTimerRef.current);
+      }
+      isDuckingRef.current = true;
+      const duckedVol = Math.max(8, Math.round(userVolumeRef.current * targetPercent));
+      playerRef.current.setVolume(duckedVol);
+
+      duckRestoreTimerRef.current = setTimeout(() => {
+        if (playerRef.current && isDuckingRef.current) {
+          try {
+            playerRef.current.setVolume(userVolumeRef.current);
+          } catch {}
+        }
+        isDuckingRef.current = false;
+        duckRestoreTimerRef.current = null;
+      }, duckDurationMs);
+    } catch {}
+  };
+
+  // Imperative handle para controle remoto do host (via celular) e TV
   useImperativeHandle(ref, () => ({
     play: () => {
       try {
@@ -149,6 +185,7 @@ export const StagePlayer = forwardRef<StagePlayerRef, StagePlayerProps>(function
     setVolume: (val: number) => changeVolume(val),
     getVolume: () => volume,
     toggleMute: () => toggleMute(),
+    duckMusic: (duckDurationMs?: number, targetPercent?: number) => duckMusic(duckDurationMs, targetPercent),
   }));
 
   // Monitora progresso do vídeo e tempo restante

@@ -241,6 +241,9 @@ export default function TVPage() {
         attackerName: isSolo ? sender : null,
       });
 
+      // Abaixa o volume da música para o som de splatter e trompete triste do tomate estourarem com força
+      playerRef.current?.duckMusic?.(3800, 0.20);
+
       isTomatoSplatterActiveRef.current = true;
       setIsTomatoSplatterActive(true);
     }
@@ -418,6 +421,10 @@ export default function TVPage() {
                 return;
               }
               lastMemeTimeRef.current = now;
+
+              // Ducking inteligente da música: abaixa temporariamente o volume do YouTube
+              // para o efeito sonoro soar com clareza e destaque total na sala!
+              playerRef.current?.duckMusic?.(2200, 0.35);
 
               soundManager.play(event.payload as SoundEffect);
               // Ativa o popup visual na TV
