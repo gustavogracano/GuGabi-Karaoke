@@ -229,41 +229,20 @@ export default function TVPage() {
 
     setEmojis((prev) => [...prev.slice(-45), ...newParticles]);
 
-    // Regra Inteligente do Tomataço:
-    // Analisa quem jogou nos últimos 5 segundos:
-    // - Se 2+ pessoas diferentes jogarem: TOMATAÇO GERAL DA GALERA!
-    // - Se 1 única pessoa jogar 4+ tomates rápidos: TOMATADA SOLO (Dedura o nome do hater!)
+    // Disparo Imediato e Impactante do Tomataço:
     if (emoji === "🍅") {
       if (isTomatoSplatterActiveRef.current) {
         return;
       }
 
-      const now = Date.now();
-      const updatedEvents = [
-        ...recentTomatoEventsRef.current.filter((t) => now - t.timestamp < 5000),
-        { timestamp: now, sender: sender || "Anônimo" },
-      ];
-      recentTomatoEventsRef.current = updatedEvents;
+      const isSolo = !!sender && sender !== "Alguém" && sender !== "Anônimo";
+      setTomatoAttackInfo({
+        isSolo: isSolo,
+        attackerName: isSolo ? sender : null,
+      });
 
-      const uniqueSenders = new Set(updatedEvents.map((e) => e.sender.toLowerCase()));
-
-      // Condição A: 2 ou mais pessoas diferentes jogaram tomate nos últimos 5s
-      const isCollectiveAttack = uniqueSenders.size >= 2 && updatedEvents.length >= 3;
-
-      // Condição B: 1 pessoa só jogou 4 ou mais tomates seguidos
-      const isSoloHaterAttack = uniqueSenders.size === 1 && updatedEvents.length >= 4;
-
-      if (isCollectiveAttack || isSoloHaterAttack) {
-        const primaryAttacker = isSoloHaterAttack ? updatedEvents[0]?.sender || null : null;
-        setTomatoAttackInfo({
-          isSolo: isSoloHaterAttack,
-          attackerName: primaryAttacker,
-        });
-
-        isTomatoSplatterActiveRef.current = true;
-        setIsTomatoSplatterActive(true);
-        recentTomatoEventsRef.current = [];
-      }
+      isTomatoSplatterActiveRef.current = true;
+      setIsTomatoSplatterActive(true);
     }
   }, []);
 

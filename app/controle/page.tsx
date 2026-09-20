@@ -507,11 +507,31 @@ export default function MobileControlPage() {
   };
 
   // 6. Reações Rápidas da Plateia (Liberado sem bloqueio - permite tomataço e chuva de reações)
+  // 6. Reações Rápidas da Plateia com Proteção Anti-Spam e Anti-Fraude de Votos
   const handleReaction = async (emoji: "❤️" | "🔥" | "👏" | "🍅") => {
+    // Se o usuário estiver no respiro de reações (bloqueia spam para não inflar votos):
+    if (emojiCooldown > 0 && !isAdminAuthenticated) {
+      return;
+    }
+
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate(40);
       } catch {}
+    }
+
+    // Controle de cliques em rajada: após 5 cliques rápidos em 2.5s, entra em respiro de 3s
+    if (!isAdminAuthenticated) {
+      emojiClickCountRef.current += 1;
+      if (emojiTimerRef.current) clearTimeout(emojiTimerRef.current);
+      emojiTimerRef.current = setTimeout(() => {
+        emojiClickCountRef.current = 0;
+      }, 2500);
+
+      if (emojiClickCountRef.current >= 5) {
+        emojiClickCountRef.current = 0;
+        setEmojiCooldown(3);
+      }
     }
 
     if (!isSupabaseConfigured()) return;
@@ -2089,12 +2109,23 @@ export default function MobileControlPage() {
         )}
       </main>
 
-      {/* BARRA FIXA DE REAÇÕES DA PLATEIA COM FEEDBACK VISUAL BOUNCE & LIVRE */}
+      {/* BARRA FIXA DE REAÇÕES DA PLATEIA COM FEEDBACK VISUAL BOUNCE & PROTEÇÃO ANTI-SPAM */}
       <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-950/85 backdrop-blur-2xl border-t border-white/15 p-3 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.85)]">
+        {emojiCooldown > 0 && !isAdminAuthenticated && (
+          <div className="mb-2 bg-pink-500/15 border border-pink-500/30 rounded-xl px-2.5 py-1 flex items-center justify-between text-[11px] text-pink-300 font-bold animate-pulse">
+            <span>Calma aí! 😅 Respiro de reações:</span>
+            <span className="font-mono bg-pink-500/30 text-white px-2 py-0.2 rounded-md">
+              {emojiCooldown}s
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => handleReaction("❤️")}
-            className="flex-1 py-2 bg-gradient-to-b from-pink-500/20 to-pink-900/30 hover:from-pink-500/35 hover:to-pink-900/50 border-2 border-pink-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)]"
+            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
+            className={`flex-1 py-2 bg-gradient-to-b from-pink-500/20 to-pink-900/30 hover:from-pink-500/35 hover:to-pink-900/50 border-2 border-pink-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)] ${
+              emojiCooldown > 0 && !isAdminAuthenticated ? "opacity-40 cursor-not-allowed filter grayscale" : ""
+            }`}
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">❤️</span>
             <span className="text-[10px] font-black text-pink-300 mt-0.5 tracking-wide">Amei</span>
@@ -2102,7 +2133,10 @@ export default function MobileControlPage() {
 
           <button
             onClick={() => handleReaction("🔥")}
-            className="flex-1 py-2 bg-gradient-to-b from-amber-500/20 to-orange-900/30 hover:from-amber-500/35 hover:to-orange-900/50 border-2 border-amber-500/50 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
+            className={`flex-1 py-2 bg-gradient-to-b from-amber-500/20 to-orange-900/30 hover:from-amber-500/35 hover:to-orange-900/50 border-2 border-amber-500/50 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] ${
+              emojiCooldown > 0 && !isAdminAuthenticated ? "opacity-40 cursor-not-allowed filter grayscale" : ""
+            }`}
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">🔥</span>
             <span className="text-[10px] font-black text-amber-300 mt-0.5 tracking-wide">Fogo</span>
@@ -2110,7 +2144,10 @@ export default function MobileControlPage() {
 
           <button
             onClick={() => handleReaction("👏")}
-            className="flex-1 py-2 bg-gradient-to-b from-emerald-500/20 to-teal-900/30 hover:from-emerald-500/35 hover:to-teal-900/50 border-2 border-emerald-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
+            className={`flex-1 py-2 bg-gradient-to-b from-emerald-500/20 to-teal-900/30 hover:from-emerald-500/35 hover:to-teal-900/50 border-2 border-emerald-500/50 active:scale-90 hover:scale-105 active:rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] ${
+              emojiCooldown > 0 && !isAdminAuthenticated ? "opacity-40 cursor-not-allowed filter grayscale" : ""
+            }`}
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform hover:scale-125">👏</span>
             <span className="text-[10px] font-black text-emerald-300 mt-0.5 tracking-wide">Palmas</span>
@@ -2118,7 +2155,10 @@ export default function MobileControlPage() {
 
           <button
             onClick={() => handleReaction("🍅")}
-            className="flex-1 py-2 bg-gradient-to-b from-red-600/30 to-red-950/40 hover:from-red-600/45 hover:to-red-950/60 border-2 border-red-500/65 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] group relative overflow-hidden"
+            disabled={emojiCooldown > 0 && !isAdminAuthenticated}
+            className={`flex-1 py-2 bg-gradient-to-b from-red-600/30 to-red-950/40 hover:from-red-600/45 hover:to-red-950/60 border-2 border-red-500/65 active:scale-90 hover:scale-105 active:-rotate-6 rounded-2xl flex flex-col items-center justify-center transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] group relative overflow-hidden ${
+              emojiCooldown > 0 && !isAdminAuthenticated ? "opacity-40 cursor-not-allowed filter grayscale" : ""
+            }`}
           >
             <span className="text-2xl sm:text-3xl select-none transition-transform group-hover:scale-125">🍅</span>
             <span className="text-[10px] font-black text-red-300 mt-0.5 tracking-wide">Tomataço</span>
