@@ -165,16 +165,13 @@ export default function MobileControlPage() {
         setUserTag(storedTag);
       }
 
-      if (storedTicket === "true") {
-        setGoldenTicketUsed(true);
-      }
-
       if (storedAdmin === "true") {
         setIsAdminAuthenticated(true);
       }
 
-      // Purga dados legados do localStorage para aliviar Safari/Chrome
+      // Purga trava legada de ticket e dados do localStorage para sincronizar via banco
       try {
+        localStorage.removeItem("gukaraoke_ticket_used");
         localStorage.removeItem("gukaraoke_party_playlist");
         localStorage.removeItem("gukaraoke_party_playlist_version");
       } catch {}
@@ -208,6 +205,19 @@ export default function MobileControlPage() {
         const pending = queueData.filter((item) => item.status === "pending");
         setCurrentSong(playing);
         setPendingQueue(pending);
+
+        // Verifica dinamicamente se o usuário já gastou o Golden Ticket na sessão ativa atual
+        if (userName.trim()) {
+          const uName = userName.trim().toLowerCase();
+          const hasUsedInActiveSession = queueData.some(
+            (item) =>
+              item.is_priority &&
+              (item.singer_name.toLowerCase() === uName ||
+                item.singer_name.toLowerCase().includes(`& ${uName}`) ||
+                item.singer_name.toLowerCase().includes(`${uName} &`))
+          );
+          setGoldenTicketUsed(hasUsedInActiveSession);
+        }
       }
 
       // Busca a Playlist do Modo Festa do Supabase
@@ -469,9 +479,6 @@ export default function MobileControlPage() {
         if (isPriority && !isAdminAuthenticated) {
           setGoldenTicketUsed(true);
           setUseGoldenTicket(false);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("gukaraoke_ticket_used", "true");
-          }
         }
         const duetLabel = duetPartner.trim() ? ` (Dueto 🎤🎤)` : "";
         setAddedSuccessMessage(`"${item.title.substring(0, 28)}..." adicionada${duetLabel}!`);
@@ -2291,11 +2298,23 @@ export default function MobileControlPage() {
                     </button>
                   </div>
 
-                  {/* Card: Moderação da TV */}
-                  <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 space-y-2">
+                  {/* Card: Moderação da Festa & Golden Tickets */}
+                  <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 space-y-2.5">
                     <span className="text-xs font-black text-slate-300 block">
-                      Moderação da Festa
+                      Moderação & Privilégios VIP
                     </span>
+                    <button
+                      onClick={() => {
+                        setGoldenTicketUsed(false);
+                        setUseGoldenTicket(true);
+                        setAddedSuccessMessage("Golden Ticket liberado para você usar agora! 🎟️✨");
+                        setTimeout(() => setAddedSuccessMessage(null), 3500);
+                      }}
+                      className="w-full py-2.5 px-3 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 rounded-xl flex items-center justify-center gap-2 text-xs font-black shadow transition-all active:scale-95"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>Liberar Golden Ticket Para Mim 🎟️</span>
+                    </button>
                     <button
                       onClick={handleClearAllGossips}
                       className="w-full py-2.5 px-3 bg-yellow-500/15 hover:bg-yellow-500/25 border border-yellow-500/35 text-yellow-300 rounded-xl flex items-center justify-center gap-2 text-xs font-black shadow transition-all active:scale-95"
