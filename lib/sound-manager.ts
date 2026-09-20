@@ -1,0 +1,345 @@
+export type SoundEffect =
+  | "errou"
+  | "aplausos"
+  | "buzina"
+  | "splash"
+  | "uepa"
+  | "danca_gatinho"
+  | "trompete_triste"
+  | "sino"
+  | "gong"
+  | "rapaz"
+  | "pare"
+  | "queisso"
+  | "brasil"
+  | "coracao";
+
+const ALL_SOUNDS: SoundEffect[] = [
+  "errou",
+  "aplausos",
+  "buzina",
+  "splash",
+  "uepa",
+  "danca_gatinho",
+  "trompete_triste",
+  "sino",
+  "gong",
+  "rapaz",
+  "pare",
+  "queisso",
+  "brasil",
+  "coracao",
+];
+
+const SOUND_NORMALIZATION: Record<SoundEffect, number> = {
+  // Sons naturalmente estridentes ou comprimidos (atenuados para equilíbrio)
+  buzina: 0.58,
+  gong: 0.60,
+  pare: 0.72,
+
+  // Sons médios/balanceados
+  sino: 0.85,
+  brasil: 0.85,
+  coracao: 0.88,
+  danca_gatinho: 0.90,
+
+  // Sons que precisam de ganho máximo para clareza
+  errou: 0.95,
+  aplausos: 1.0,
+  uepa: 1.0,
+  rapaz: 1.0,
+  queisso: 1.0,
+  trompete_triste: 1.0,
+  splash: 1.0,
+};
+
+class SoundManager {
+  private audioCtx: AudioContext | null = null;
+  private audioBuffers: Map<SoundEffect, AudioBuffer> = new Map();
+  private audioElements: Map<SoundEffect, HTMLAudioElement> = new Map();
+  private isUnlocked = false;
+  private masterVolume = 0.85;
+  private lastPlayed: Map<SoundEffect, number> = new Map();
+  private isApplausePlaying = false;
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      this.initAudioContext();
+      this.preloadAllSounds();
+    }
+  }
+
+  private initAudioContext() {
+    if (this.audioCtx || typeof window === "undefined") return;
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioContextClass) {
+        this.audioCtx = new AudioContextClass();
+      }
+    } catch (e) {
+      console.warn("Não foi possível inicializar AudioContext:", e);
+    }
+  }
+
+  // Pré-carrega e decodifica TODOS os arquivos estáticos locais para a memória RAM
+  private async preloadAllSounds() {
+    if (typeof window === "undefined") return;
+
+    for (const sound of ALL_SOUNDS) {
+      // 1. Fallback HTML5 Audio imediato
+      try {
+        const audio = new Audio(`/sounds/${sound}.mp3`);
+        audio.preload = "auto";
+        this.audioElements.set(sound, audio);
+      } catch {}
+
+      // 2. Pré-carregamento com decodeAudioData no Web Audio (0ms de latência)
+      this.preloadAudioBuffer(sound);
+    }
+  }
+
+  private async preloadAudioBuffer(sound: SoundEffect) {
+    try {
+      this.initAudioContext();
+      const response = await fetch(`/sounds/${sound}.mp3`);
+      if (!response.ok) return;
+      const arrayBuffer = await response.arrayBuffer();
+
+      if (this.audioCtx) {
+        // Decodifica os bytes MP3 diretamente para PCM na RAM
+        const decodedBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
+        this.audioBuffers.set(sound, decodedBuffer);
+      }
+    } catch {
+      // Fallback permanece pronto via audioElements
+    }
+  }
+
+  public setMasterVolume(vol: number) {
+    this.masterVolume = Math.max(0, Math.min(1, vol));
+  }
+
+  public getMasterVolume(): number {
+    return this.masterVolume;
+  }
+
+  // Desbloqueia o áudio no primeiro clique/toque do usuário (política de autoplay do Chrome/Safari)
+  public unlockAudio() {
+    if (typeof window === "undefined") return;
+    this.initAudioContext();
+    if (this.audioCtx && this.audioCtx.state === "suspended") {
+      this.audioCtx.resume().catch(() => {});
+    }
+    this.isUnlocked = true;
+  }
+
+  public play(sound: SoundEffect) {
+    if (typeof window === "undefined") return;
+    this.unlockAudio();
+
+    // Throttle para evitar sobreposição caótica no mesmo som (mínimo 350ms)
+    const nowTime = Date.now();
+    const last = this.lastPlayed.get(sound) || 0;
+    if (nowTime - last < 350) {
+      return;
+    }
+    this.lastPlayed.set(sound, nowTime);
+
+    // Evita sobreposição de aplausos se já estiver tocando
+    if (sound === "aplausos" && this.isApplausePlaying) {
+      return;
+    }
+
+    const baseGain = SOUND_NORMALIZATION[sound] ?? 0.85;
+    const targetGain = Math.max(0, Math.min(1, baseGain * this.masterVolume));
+
+    // =========================================================================
+    // ROTA A (Prioritária): Web Audio API com AudioBuffer da RAM (Latência 0ms)
+    // =========================================================================
+    if (this.audioCtx && this.audioBuffers.has(sound)) {
+      try {
+        if (this.audioCtx.state === "suspended") {
+          this.audioCtx.resume();
+        }
+
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = this.audioBuffers.get(sound)!;
+        const gainNode = this.audioCtx.createGain();
+
+        if (sound === "aplausos") {
+          this.isApplausePlaying = true;
+          // Fade-out suave programado com o clock nativo de alta precisão
+          const curr = this.audioCtx.currentTime;
+          gainNode.gain.setValueAtTime(targetGain, curr);
+          gainNode.gain.setValueAtTime(targetGain, curr + 3.0);
+          gainNode.gain.linearRampToValueAtTime(0.01, curr + 3.7);
+
+          source.onended = () => {
+            this.isApplausePlaying = false;
+          };
+        } else {
+          gainNode.gain.setValueAtTime(targetGain, this.audioCtx.currentTime);
+        }
+
+        source.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
+        return;
+      } catch (err) {
+        console.warn("Erro ao tocar via Web Audio API, tentando fallback:", err);
+      }
+    }
+
+    // =========================================================================
+    // ROTA B (Fallback Rápido): HTML5 Audio Pool Pré-carregado
+    // =========================================================================
+    try {
+      const audio = this.audioElements.get(sound);
+      if (audio) {
+        audio.currentTime = 0;
+        audio.volume = targetGain;
+        audio.loop = false;
+
+        if (sound === "aplausos") {
+          this.isApplausePlaying = true;
+          const timer = setTimeout(() => {
+            try {
+              audio.pause();
+              audio.currentTime = 0;
+            } catch {}
+            this.isApplausePlaying = false;
+          }, 3700);
+          audio.onended = () => {
+            clearTimeout(timer);
+            this.isApplausePlaying = false;
+          };
+        }
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            if (sound === "aplausos") this.isApplausePlaying = false;
+            this.playSynthesized(sound);
+          });
+        }
+        return;
+      }
+    } catch {
+      // Fallback sintetizado
+    }
+
+    this.playSynthesized(sound);
+  }
+
+  // Fallback via Web Audio API caso o arquivo não toque
+  private playSynthesized(sound: SoundEffect) {
+    try {
+      this.initAudioContext();
+      if (!this.audioCtx) return;
+
+      const ctx = this.audioCtx;
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      if (sound === "errou") {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = "sawtooth";
+        osc2.type = "sawtooth";
+        osc1.frequency.setValueAtTime(140, now);
+        osc2.frequency.setValueAtTime(185, now);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.8);
+        osc2.stop(now + 0.8);
+      } else if (sound === "buzina") {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.5);
+
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (sound === "splash") {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(380, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
+
+        gain.gain.setValueAtTime(0.6, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (sound === "aplausos") {
+        const bufferSize = ctx.sampleRate * 1.5;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.8));
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.5, now);
+        noise.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start(now);
+      } else if (sound === "trompete_triste") {
+        // Fallback sintetizado: Wah-wah-wah-waaaah (Bb - A - Ab - G)
+        const notes = [
+          { freq: 233.08, start: 0.0, dur: 0.35 },
+          { freq: 220.0, start: 0.4, dur: 0.35 },
+          { freq: 207.65, start: 0.8, dur: 0.35 },
+          { freq: 196.0, start: 1.2, dur: 0.9, bend: true },
+        ];
+        notes.forEach((n) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          const startT = now + n.start;
+          osc.frequency.setValueAtTime(n.freq, startT);
+          if (n.bend) {
+            osc.frequency.linearRampToValueAtTime(n.freq * 0.88, startT + n.dur);
+          }
+          gain.gain.setValueAtTime(0.35, startT);
+          gain.gain.exponentialRampToValueAtTime(0.01, startT + n.dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startT);
+          osc.stop(startT + n.dur);
+        });
+      }
+    } catch (e) {
+      console.warn("Erro ao sintetizar áudio:", e);
+    }
+  }
+}
+
+export const soundManager = new SoundManager();

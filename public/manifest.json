@@ -1,0 +1,36 @@
+{
+  "name": "GuGabi Karaoke",
+  "short_name": "GuGabi",
+  "description": "Karaokê colaborativo em tempo real",
+  "start_url": "/controle",
+  "display": "standalone",
+  "background_color": "#07070f",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedir Música",
+      "url": "/controle",
+      "description": "Adicionar músicas à fila"
+    },
+    {
+      "name": "Tela da TV",
+      "url": "/tv",
+      "description": "Abrir tela do palco"
+    }
+  ]
+}

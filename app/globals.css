@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #07070f;
+  --foreground: #ededed;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Scrollbar moderna translúcida */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 10, 20, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 127, 0.5);
+}
+
+/* Brilhos Neon */
+.text-neon-pink {
+  color: #ff007f;
+  text-shadow: 0 0 10px rgba(255, 0, 127, 0.7);
+}
+
+.text-neon-cyan {
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+}
+
+.text-neon-yellow {
+  color: #ffea00;
+  text-shadow: 0 0 10px rgba(255, 234, 0, 0.7);
+}
+
+.text-neon-purple {
+  color: #b5179e;
+  text-shadow: 0 0 10px rgba(181, 23, 158, 0.7);
+}
+
+/* Fundo Palco com Gradiente Radial */
+.stage-bg {
+  background: radial-gradient(circle at 50% 20%, #1e113a 0%, #0c0919 60%, #05040a 100%);
+}
+
+.stage-spotlight {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  height: 40vh;
+  background: radial-gradient(ellipse at top, rgba(157, 78, 221, 0.22) 0%, rgba(0, 240, 255, 0.08) 50%, transparent 80%);
+  pointer-events: none;
+}
+
+/* Animação Marquee do Rodapé */
+@keyframes tickerTape {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-ticker-tape {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerTape 24s linear infinite;
+}
+
+.animate-ticker-tape:hover {
+  animation-play-state: paused;
+}
+
+/* Animação de Tremor de Tela para o Tomataço */
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10%, 90% { transform: translate(-5px, 4px) rotate(-1.5deg); }
+  20%, 80% { transform: translate(5px, -4px) rotate(1.5deg); }
+  30%, 50%, 70% { transform: translate(-6px, -4px) rotate(-1deg); }
+  40%, 60% { transform: translate(6px, 4px) rotate(1deg); }
+}
+
+.animate-screen-shake {
+  animation: screenShake 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes gossipCountdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes progressPulse {
+  0%, 100% { opacity: 0.5; transform: scaleX(0.3); transform-origin: left; }
+  50% { opacity: 1; transform: scaleX(1); transform-origin: left; }
+}
