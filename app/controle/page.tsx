@@ -50,6 +50,7 @@ import {
   PartySong,
   extractYouTubeId,
 } from "@/lib/party-playlist";
+import { soundManager } from "@/lib/sound-manager";
 
 export default function MobileControlPage() {
   // Perfil do Convidado
@@ -479,7 +480,17 @@ export default function MobileControlPage() {
         if (isPriority && !isAdminAuthenticated) {
           setGoldenTicketUsed(true);
           setUseGoldenTicket(false);
+          soundManager.playVipFanfare();
+        } else {
+          soundManager.playSuccessChime();
         }
+
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          try {
+            navigator.vibrate(isPriority ? [50, 100, 150] : 60);
+          } catch {}
+        }
+
         const duetLabel = duetPartner.trim() ? ` (Dueto 🎤🎤)` : "";
         setAddedSuccessMessage(`"${item.title.substring(0, 28)}..." adicionada${duetLabel}!`);
         setTimeout(() => setAddedSuccessMessage(null), 4000);
@@ -1086,6 +1097,10 @@ export default function MobileControlPage() {
       }
       setGossipText("");
       setGossipSuccess(true);
+      soundManager.playSuccessChime();
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try { navigator.vibrate(50); } catch {}
+      }
       if (!isAdminAuthenticated) {
         setGossipCooldown(20);
       }
@@ -1612,52 +1627,100 @@ export default function MobileControlPage() {
               ))}
             </div>
 
-            {/* Sugestões Rápidas de Karaokê em Destaque */}
+            {/* Gêneros e Inspirações Rápidas de Karaokê */}
             {searchResults.length === 0 && !isSearching && (
-              <div className="pt-2 text-center space-y-2.5">
-                <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-bold">
-                  <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                  <span>Inspirações para cantar agora:</span>
+              <div className="pt-2 space-y-3">
+                {/* Categorias / Estilos em Destaque */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-bold px-1">
+                    <span className="flex items-center gap-1">
+                      <ListMusic className="w-3.5 h-3.5 text-pink-400" />
+                      <span>Gêneros da Festa:</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-normal">Toque para buscar</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {[
+                      { title: "Sertanejo & Modão", query: "sertanejo karaoke", icon: "🤠", color: "from-amber-600/30 to-yellow-600/20 border-amber-500/30 text-amber-200" },
+                      { title: "Pagode & Samba", query: "pagode karaoke", icon: "🥁", color: "from-orange-600/30 to-red-600/20 border-orange-500/30 text-orange-200" },
+                      { title: "Pop Brasil & Hits", query: "pop brasil karaoke", icon: "✨", color: "from-pink-600/30 to-purple-600/20 border-pink-500/30 text-pink-200" },
+                      { title: "Rock & Anos 80/90", query: "rock nacional karaoke", icon: "🎸", color: "from-cyan-600/30 to-blue-600/20 border-cyan-500/30 text-cyan-200" },
+                    ].map((cat) => (
+                      <button
+                        key={cat.title}
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(cat.query);
+                          setIsSearching(true);
+                          setSearchError(null);
+                          const typeParam = searchType === "free" ? "&type=party" : "";
+                          fetch(`/api/search-youtube?q=${encodeURIComponent(cat.query)}${typeParam}`)
+                            .then((r) => r.json())
+                            .then((d) => {
+                              setSearchResults(d.items || []);
+                              setIsSearching(false);
+                            })
+                            .catch(() => {
+                              setIsSearching(false);
+                              setSearchError("Erro ao pesquisar gênero.");
+                            });
+                        }}
+                        className={`p-2 rounded-xl bg-gradient-to-r ${cat.color} border text-left flex items-center gap-2 hover:brightness-125 transition-all active:scale-95 shadow-sm`}
+                      >
+                        <span className="text-base shrink-0">{cat.icon}</span>
+                        <span className="text-[11px] font-black leading-tight line-clamp-1">{cat.title}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {[
-                    { label: "Evidências", icon: "🤠" },
-                    { label: "Cheia de Manias", icon: "🥁" },
-                    { label: "Bohemian Rhapsody", icon: "👑" },
-                    { label: "Não Quero Dinheiro", icon: "🕺" },
-                    { label: "Tempo Perdido", icon: "🎸" },
-                    { label: "Fogo e Paixão", icon: "🌹" },
-                    { label: "Pipoco", icon: "🚜" },
-                    { label: "Macetando", icon: "🎉" },
-                    { label: "Anna Júlia", icon: "🎤" },
-                    { label: "Como Nossos Pais", icon: "✨" },
-                    { label: "Nem de Graça", icon: "🍻" },
-                    { label: "Lepo Lepo", icon: "💥" },
-                  ].map((sug) => (
-                    <button
-                      key={sug.label}
-                      onClick={() => {
-                        setSearchQuery(sug.label);
-                        setIsSearching(true);
-                        setSearchError(null);
-                        const typeParam = searchType === "free" ? "&type=party" : "";
-                        fetch(`/api/search-youtube?q=${encodeURIComponent(sug.label)}${typeParam}`)
-                          .then((r) => r.json())
-                          .then((d) => {
-                            setSearchResults(d.items || []);
-                            setIsSearching(false);
-                          })
-                          .catch(() => {
-                            setIsSearching(false);
-                            setSearchError("Erro ao pesquisar música.");
-                          });
-                      }}
-                      className="bg-white/5 hover:bg-pink-600/30 border border-white/10 hover:border-pink-500/40 px-3 py-1.5 rounded-full text-xs text-slate-200 hover:text-white transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-                    >
-                      <span className="text-sm">{sug.icon}</span>
-                      <span className="font-semibold">{sug.label}</span>
-                    </button>
-                  ))}
+
+                {/* Hits Clássicos Diretos */}
+                <div className="space-y-1.5 pt-1 border-t border-white/5">
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-bold">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+                    <span>Músicas certeiras que todo mundo canta:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {[
+                      { label: "Evidências", icon: "🤠" },
+                      { label: "Cheia de Manias", icon: "🥁" },
+                      { label: "Bohemian Rhapsody", icon: "👑" },
+                      { label: "Não Quero Dinheiro", icon: "🕺" },
+                      { label: "Tempo Perdido", icon: "🎸" },
+                      { label: "Fogo e Paixão", icon: "🌹" },
+                      { label: "Pipoco", icon: "🚜" },
+                      { label: "Macetando", icon: "🎉" },
+                      { label: "Anna Júlia", icon: "🎤" },
+                      { label: "Como Nossos Pais", icon: "✨" },
+                      { label: "Nem de Graça", icon: "🍻" },
+                      { label: "Lepo Lepo", icon: "💥" },
+                    ].map((sug) => (
+                      <button
+                        key={sug.label}
+                        onClick={() => {
+                          setSearchQuery(sug.label);
+                          setIsSearching(true);
+                          setSearchError(null);
+                          const typeParam = searchType === "free" ? "&type=party" : "";
+                          fetch(`/api/search-youtube?q=${encodeURIComponent(sug.label)}${typeParam}`)
+                            .then((r) => r.json())
+                            .then((d) => {
+                              setSearchResults(d.items || []);
+                              setIsSearching(false);
+                            })
+                            .catch(() => {
+                              setIsSearching(false);
+                              setSearchError("Erro ao pesquisar música.");
+                            });
+                        }}
+                        className="bg-white/5 hover:bg-pink-600/30 border border-white/10 hover:border-pink-500/40 px-3 py-1.5 rounded-full text-xs text-slate-200 hover:text-white transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span className="text-sm">{sug.icon}</span>
+                        <span className="font-semibold">{sug.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -2114,6 +2177,41 @@ export default function MobileControlPage() {
               ) : (
                 /* Ações de Anfitrião */
                 <>
+                  {/* Banner Ação Rápida: Começar / Resetar Festa */}
+                  <div className="bg-gradient-to-r from-red-950/40 via-purple-950/40 to-pink-950/40 p-3 rounded-2xl border border-red-500/30 flex items-center justify-between gap-2 shadow-inner">
+                    <div className="min-w-0">
+                      <span className="text-xs font-black text-red-300 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>Preparar para a Festa</span>
+                      </span>
+                      <p className="text-[10px] text-slate-300 truncate">Zera reações, fofocas e renova tickets</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm("🚀 Deseja preparar a festa agora? Isso vai apagar fila/testes antigos, zerar fofocas e reações, e liberar Golden Ticket novo para todo mundo.")) return;
+                        if (isSupabaseConfigured()) {
+                          try {
+                            await supabase.from("karaoke_queue").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            await supabase.from("karaoke_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            await supabase.from("karaoke_reactions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                            fetchData();
+                          } catch (e) {
+                            console.error("Erro ao iniciar nova festa:", e);
+                          }
+                        }
+                        setGoldenTicketUsed(false);
+                        setUseGoldenTicket(true);
+                        soundManager.playVipFanfare();
+                        setAddedSuccessMessage("🎉 Festa Iniciada! Tudo limpo e Golden Tickets liberados!");
+                        setTimeout(() => setAddedSuccessMessage(null), 4000);
+                      }}
+                      className="px-3 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white rounded-xl text-xs font-black shadow transition-all active:scale-95 shrink-0 flex items-center gap-1.5"
+                    >
+                      <span>🚀 Zerar & Iniciar</span>
+                    </button>
+                  </div>
+
                   {/* Card: No Palco Agora */}
                   <div className="bg-white/5 p-3 rounded-2xl border border-white/10 text-xs">
                     <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-bold mb-1">

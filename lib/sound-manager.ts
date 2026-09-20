@@ -340,6 +340,68 @@ class SoundManager {
       console.warn("Erro ao sintetizar áudio:", e);
     }
   }
+
+  /**
+   * Som de sucesso sutil para ações no celular (ex: envio de fofoca, adicionar música)
+   */
+  public playSuccessChime() {
+    try {
+      this.initAudioContext();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      if (ctx.state === "suspended") ctx.resume();
+
+      const now = ctx.currentTime;
+      // Arpejo ascendente suave de 3 notas (Mi5, Sol#5, Si5)
+      const notes = [659.25, 830.61, 987.77];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        const startT = now + idx * 0.08;
+        osc.frequency.setValueAtTime(freq, startT);
+        gain.gain.setValueAtTime(0.18, startT);
+        gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startT);
+        osc.stop(startT + 0.35);
+      });
+    } catch (e) {
+      // AudioContext não inicializado ou bloqueado
+    }
+  }
+
+  /**
+   * Fanfarra VIP brilhante para Golden Ticket (efeito mágico dourado)
+   */
+  public playVipFanfare() {
+    try {
+      this.initAudioContext();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      if (ctx.state === "suspended") ctx.resume();
+
+      const now = ctx.currentTime;
+      // Escala mágica cintilante (Dó5, Mi5, Sol5, Dó6)
+      const chord = [523.25, 659.25, 783.99, 1046.50];
+      chord.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        const startT = now + idx * 0.07;
+        osc.frequency.setValueAtTime(freq, startT);
+        gain.gain.setValueAtTime(0.25, startT);
+        gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startT);
+        osc.stop(startT + 0.5);
+      });
+    } catch (e) {
+      // AudioContext não inicializado ou bloqueado
+    }
+  }
 }
 
 export const soundManager = new SoundManager();

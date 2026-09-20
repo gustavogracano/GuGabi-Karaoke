@@ -288,19 +288,25 @@ export function StageBottomBar({
         </div>
 
         {/* Linha Central: Texto da Fofoca ou Dica Divertida */}
-        <div className="flex-1 flex items-center justify-center my-0.5 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center my-0.5 px-2 overflow-hidden">
           {activeGossip ? (
             <div
               className={`w-full text-center transition-all duration-200 transform ${
                 isTransitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
               }`}
             >
-              <p className="font-black text-white text-xs sm:text-sm md:text-base tracking-wide truncate drop-shadow">
-                <span className="text-pink-400 mr-1 font-serif text-base select-none">“</span>
+              <p className={`font-black text-white leading-tight tracking-wide drop-shadow line-clamp-2 ${
+                activeGossip.text.length > 90
+                  ? "text-xs sm:text-sm"
+                  : activeGossip.text.length > 50
+                  ? "text-sm sm:text-base"
+                  : "text-base sm:text-lg"
+              }`}>
+                <span className="text-pink-400 mr-1 font-serif select-none">“</span>
                 <span className="bg-gradient-to-r from-white via-pink-100 to-white bg-clip-text text-transparent">
                   {activeGossip.text}
                 </span>
-                <span className="text-pink-400 ml-1 font-serif text-base select-none">”</span>
+                <span className="text-pink-400 ml-1 font-serif select-none">”</span>
               </p>
             </div>
           ) : (
@@ -309,7 +315,7 @@ export function StageBottomBar({
                 tipFade ? "opacity-100" : "opacity-0"
               }`}
             >
-              <p className="font-bold text-slate-200 text-xs sm:text-sm truncate">
+              <p className="font-bold text-slate-200 text-xs sm:text-sm md:text-base line-clamp-2 leading-snug">
                 {IDLE_PARTY_TIPS[tipIndex]}
               </p>
             </div>
