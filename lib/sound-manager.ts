@@ -100,10 +100,6 @@ class SoundManager {
   private masterVolume = 0.85;
   private lastPlayed: Map<SoundEffect, number> = new Map();
   private isApplausePlaying = false;
-  private currentSource: AudioBufferSourceNode | null = null;
-  private currentGainNode: GainNode | null = null;
-  private currentAudioElement: HTMLAudioElement | null = null;
-  private currentCutoffTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -182,10 +178,10 @@ class SoundManager {
     if (typeof window === "undefined") return;
     this.unlockAudio();
 
-    // Throttle para evitar sobreposição caótica no mesmo som (mínimo 350ms)
+    // Throttle leve de 200ms apenas para cliques repetidos no MESMO som
     const nowTime = Date.now();
     const last = this.lastPlayed.get(sound) || 0;
-    if (nowTime - last < 350) {
+    if (nowTime - last < 200) {
       return;
     }
     this.lastPlayed.set(sound, nowTime);
@@ -195,19 +191,8 @@ class SoundManager {
       return;
     }
 
-    // Para o som anterior imediatamente se outro for disparado (evita embolar quando mandam vários)
-    this.stopActiveMemeSound();
-
     const baseGain = SOUND_NORMALIZATION[sound] ?? 0.85;
     const targetGain = Math.max(0, Math.min(1, baseGain * this.masterVolume));
-
-    // Duração máxima dinâmica: sons curtos e pontuais (1.5s - 2.0s)
-    const maxDurationSec =
-      sound === "aplausos" ? 3.0 :
-      sound === "tetra" ? 2.2 :
-      sound === "plantao" ? 2.2 :
-      sound === "errou" ? 2.0 :
-      1.6;
 
     // =========================================================================
     // ROTA A (Prioritária): Web Audio API com AudioBuffer da RAM (Latência 0ms)
@@ -222,31 +207,18 @@ class SoundManager {
         source.buffer = this.audioBuffers.get(sound)!;
         const gainNode = this.audioCtx.createGain();
 
-        const curr = this.audioCtx.currentTime;
-        gainNode.gain.setValueAtTime(targetGain, curr);
-
-        // Fade-out suave antes de cortar para evitar cliques estáticos
-        const fadeStart = curr + Math.max(0.3, maxDurationSec - 0.25);
-        const fadeEnd = curr + maxDurationSec;
-        gainNode.gain.setValueAtTime(targetGain, fadeStart);
-        gainNode.gain.linearRampToValueAtTime(0.001, fadeEnd);
+        gainNode.gain.setValueAtTime(targetGain, this.audioCtx.currentTime);
 
         source.connect(gainNode);
         gainNode.connect(this.audioCtx.destination);
         source.start(0);
 
-        this.currentSource = source;
-        this.currentGainNode = gainNode;
-
-        source.onended = () => {
-          if (this.currentSource === source) {
-            this.currentSource = null;
-            this.currentGainNode = null;
-          }
-          if (sound === "aplausos") {
+        if (sound === "aplausos") {
+          this.isApplausePlaying = true;
+          source.onended = () => {
             this.isApplausePlaying = false;
-          }
-        };
+          };
+        }
 
         return;
       } catch (err) {
@@ -263,29 +235,13 @@ class SoundManager {
         audio.currentTime = 0;
         audio.volume = targetGain;
         audio.loop = false;
-        this.currentAudioElement = audio;
 
-        if (this.currentCutoffTimer) {
-          clearTimeout(this.currentCutoffTimer);
+        if (sound === "aplausos") {
+          this.isApplausePlaying = true;
+          audio.onended = () => {
+            this.isApplausePlaying = false;
+          };
         }
-
-        this.currentCutoffTimer = setTimeout(() => {
-          try {
-            audio.pause();
-            audio.currentTime = 0;
-          } catch {}
-          if (this.currentAudioElement === audio) {
-            this.currentAudioElement = null;
-          }
-        }, maxDurationSec * 1000);
-
-        audio.onended = () => {
-          if (this.currentCutoffTimer) clearTimeout(this.currentCutoffTimer);
-          if (this.currentAudioElement === audio) {
-            this.currentAudioElement = null;
-          }
-          if (sound === "aplausos") this.isApplausePlaying = false;
-        };
 
         const playPromise = audio.play();
         if (playPromise !== undefined) {
@@ -301,42 +257,6 @@ class SoundManager {
     }
 
     this.playSynthesized(sound);
-  }
-
-  // Interrompe imediatamente qualquer áudio de meme ativo
-  public stopActiveMemeSound() {
-    if (this.currentCutoffTimer) {
-      clearTimeout(this.currentCutoffTimer);
-      this.currentCutoffTimer = null;
-    }
-
-    if (this.currentSource) {
-      try {
-        if (this.currentGainNode && this.audioCtx) {
-          const curr = this.audioCtx.currentTime;
-          this.currentGainNode.gain.setValueAtTime(this.currentGainNode.gain.value, curr);
-          this.currentGainNode.gain.linearRampToValueAtTime(0.001, curr + 0.05);
-        }
-        setTimeout(() => {
-          try {
-            this.currentSource?.stop();
-          } catch {}
-          this.currentSource = null;
-          this.currentGainNode = null;
-        }, 50);
-      } catch {
-        this.currentSource = null;
-        this.currentGainNode = null;
-      }
-    }
-
-    if (this.currentAudioElement) {
-      try {
-        this.currentAudioElement.pause();
-        this.currentAudioElement.currentTime = 0;
-      } catch {}
-      this.currentAudioElement = null;
-    }
   }
 
   // Fallback via Web Audio API caso o arquivo não toque
