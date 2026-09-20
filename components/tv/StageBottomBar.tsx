@@ -328,60 +328,6 @@ export function StageBottomBar({
           )}
         </div>
       </div>
-
-      {/* 3. CARD DIREITO: PRÓXIMO NA FILA ("PREPARA O GOGÓ") */}
-      <div className="bg-slate-900/90 backdrop-blur-2xl border-2 border-purple-500/40 rounded-2xl p-2 md:p-2.5 shadow-[0_0_20px_rgba(168,85,247,0.2)] w-full sm:w-56 md:w-64 shrink-0 flex flex-col justify-center overflow-hidden">
-        {nextSong ? (
-          <div>
-            <div className="flex items-center justify-between gap-1 mb-0.5">
-              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-cyan-300">
-                <Mic className="w-3 h-3 text-cyan-400" />
-                <span>A Seguir</span>
-              </span>
-              {nextSong.is_priority && (
-                <span className="text-[9px] font-black uppercase bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 px-1.5 py-0.2 rounded shadow animate-pulse">
-                  ⭐ VIP
-                </span>
-              )}
-            </div>
-            <p className="text-xs md:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-cyan-300 truncate">
-              {nextSong.singer_name}
-            </p>
-            <p className="text-[11px] text-slate-300 truncate">
-              "{nextSong.title}"
-            </p>
-          </div>
-        ) : isPartyActive && nextPartyTrack ? (
-          <div>
-            <div className="flex items-center justify-between gap-1 mb-0.5">
-              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-pink-300">
-                <Radio className="w-3 h-3 text-pink-400" />
-                <span>Na Festa • A Seguir</span>
-              </span>
-              <span className="text-[9px] text-yellow-300 font-bold">Clipe Oficial</span>
-            </div>
-            <p className="text-xs md:text-sm font-black text-white truncate">
-              {nextPartyTrack.artist}
-            </p>
-            <p className="text-[11px] text-pink-200 truncate">
-              "{nextPartyTrack.title}"
-            </p>
-          </div>
-        ) : (
-          <div className="text-center py-0.5">
-            <div className="flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-wider text-yellow-300 mb-0.5">
-              <Sparkles className="w-3 h-3 text-yellow-400" />
-              <span>Palco Aberto</span>
-            </div>
-            <p className="text-xs font-black text-white truncate">
-              Sua vez de cantar!
-            </p>
-            <p className="text-[10px] text-slate-400 truncate">
-              Peça uma música pelo celular
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
